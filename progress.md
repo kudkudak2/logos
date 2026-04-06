@@ -44,3 +44,13 @@ TODOs / Next steps:
 - Install local `playwright` if screenshot-based validation is required; current environment still cannot run the `develop-web-game` Playwright loop.
 - Add a second chamber or a failed-synthesis branch if the next iteration needs more explicit "scientist" experimentation depth.
 - If offline portability matters, replace CDN imports with local vendored `three.js` modules while keeping the single-file structure conceptually intact.
+
+- Added smartphone-focused controls directly in `index.html`: a virtual movement pad, large on-screen `Lens` / `Observe` / `Isolate` / `Imprint` / `Use` buttons, tap-to-select, and tap-again-to-act behavior for touch pointers.
+- Reworked the responsive HUD so the Astrolabe and Lexicon become compact scrollable panels on small screens instead of full-height overlays.
+- Improved touch readability by keeping the selected object outlined even without hover and hiding the desktop reticle on coarse pointers.
+- Validation completed with inline module extraction + `node --check` and `npm run build`.
+- Rechecked the `develop-web-game` Playwright client. It still cannot run here because the `playwright` package is not installed locally (`ERR_MODULE_NOT_FOUND`).
+
+TODOs / Next steps:
+- If mobile camera rotation feels too sensitive on device, tune OrbitControls touch settings or add a dedicated right-side look pad.
+- Install `playwright` locally if screenshot validation on an actual mobile viewport is required.

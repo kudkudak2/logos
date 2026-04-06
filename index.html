@@ -491,6 +491,101 @@
         font-size: 20px;
       }
 
+      .mobile-controls {
+        position: absolute;
+        left: 12px;
+        right: 12px;
+        bottom: 12px;
+        z-index: 14;
+        display: none;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 12px;
+        pointer-events: none;
+      }
+
+      .mobile-cluster,
+      .mobile-buttons {
+        display: flex;
+        gap: 10px;
+        pointer-events: auto;
+      }
+
+      .mobile-cluster {
+        align-items: flex-end;
+      }
+
+      .mobile-pad {
+        position: relative;
+        width: 116px;
+        height: 116px;
+        border-radius: 50%;
+        border: 1px solid rgba(136, 119, 85, 0.55);
+        background:
+          radial-gradient(circle at center, rgba(255, 183, 3, 0.16), rgba(17, 17, 17, 0.72) 62%),
+          rgba(17, 17, 17, 0.72);
+        backdrop-filter: blur(6px);
+        touch-action: none;
+      }
+
+      .mobile-pad::after {
+        content: "";
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 34px;
+        height: 34px;
+        margin-left: -17px;
+        margin-top: -17px;
+        border-radius: 50%;
+        border: 1px solid rgba(255, 183, 3, 0.16);
+      }
+
+      .mobile-stick {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 44px;
+        height: 44px;
+        margin-left: -22px;
+        margin-top: -22px;
+        border-radius: 50%;
+        border: 1px solid rgba(255, 183, 3, 0.5);
+        background: rgba(255, 183, 3, 0.18);
+        box-shadow: 0 0 20px rgba(255, 183, 3, 0.18);
+        transition: transform 80ms ease;
+      }
+
+      .mobile-buttons {
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        width: min(238px, 56vw);
+      }
+
+      .mobile-btn {
+        min-width: 72px;
+        min-height: 52px;
+        padding: 10px 12px;
+        border: 1px solid rgba(136, 119, 85, 0.72);
+        background: rgba(17, 17, 17, 0.82);
+        color: var(--ink);
+        font-size: 12px;
+        letter-spacing: 0.06em;
+        backdrop-filter: blur(6px);
+        touch-action: manipulation;
+      }
+
+      .mobile-btn.active,
+      .mobile-btn.primary {
+        border-color: rgba(255, 183, 3, 0.92);
+        color: var(--gold);
+        box-shadow: inset 0 0 20px rgba(255, 183, 3, 0.1);
+      }
+
+      .mobile-btn.primary {
+        min-width: 112px;
+      }
+
       @media (max-width: 920px) {
         .overlay-grid {
           grid-template-columns: 1fr;
@@ -512,23 +607,80 @@
       }
 
       @media (max-width: 720px) {
+        .overlay-panel {
+          padding: 20px;
+        }
+
+        .overlay-panel .subhead {
+          font-size: 15px;
+          line-height: 1.55;
+        }
+
         .instrument {
           width: calc(100vw - 28px);
+          max-height: 28vh;
+          overflow: auto;
+          padding: 12px;
         }
 
         .instrument-left {
           left: 14px;
           right: 14px;
-          bottom: 146px;
+          top: 74px;
+          bottom: auto;
         }
 
         .instrument-right {
           left: 14px;
           right: 14px;
-          bottom: 14px;
+          bottom: 138px;
         }
 
         .hint {
+          display: none;
+        }
+
+        .status-strip {
+          top: 10px;
+          width: calc(100vw - 20px);
+          gap: 8px;
+          padding: 8px 10px;
+        }
+
+        .status-copy {
+          font-size: 11px;
+        }
+
+        .status-state,
+        #ui-btn {
+          padding: 5px 8px;
+          font-size: 11px;
+        }
+
+        .story-line {
+          min-height: 72px;
+        }
+
+        .log-container {
+          gap: 6px;
+        }
+
+        .log-entry {
+          font-size: 11px;
+          padding: 6px 8px;
+        }
+
+        .mobile-controls {
+          display: flex;
+        }
+      }
+
+      @media (pointer: coarse) {
+        .mobile-controls {
+          display: flex;
+        }
+
+        .viewport-cursor {
           display: none;
         }
       }
@@ -564,7 +716,8 @@
               <span class="label-tag">Left Drag</span> rotates the view. <span class="label-tag">Left Click</span> selects an object.
               <span class="label-tag">1</span> Observe. <span class="label-tag">2</span> Isolate. <span class="label-tag">3</span> Imprint.
               <span class="label-tag">E</span> uses the current instrument. <span class="label-tag">Space</span> toggles Lens Mode.
-              <span class="label-tag">Tab</span> hides the interface.
+              <span class="label-tag">Tab</span> hides the interface. On phone: drag the left pad to walk, tap the room to select, tap again or press
+              <span class="label-tag">Use</span> to act.
             </div>
             <div class="overlay-card">
               <div class="eyebrow">Objective</div>
@@ -606,7 +759,7 @@
           <div id="target-mode" class="eyebrow">Surface</div>
         </div>
         <div class="instrument-body">
-          <div id="surface-copy" class="surface-line">Walk with WASD. Click an object to stabilize it. Use Observe, Isolate, and Imprint to work on its syntax.</div>
+          <div id="surface-copy" class="surface-line">Walk with WASD or the mobile pad. Click or tap an object to stabilize it. Use Observe, Isolate, and Imprint to work on its syntax.</div>
           <div id="story-copy" class="story-line">No true story is currently resolved.</div>
           <div id="target-chip" class="target-chip">No object selected.</div>
           <button id="extract-btn" class="extract-button" type="button" disabled>[ SELECT AN OBJECT ]</button>
@@ -630,6 +783,21 @@
         <span class="label-tag">Hint:</span>
         Open the shutter so the mirror has a present witness. A concept cannot be plucked from a story that is not currently
         instantiated.
+      </div>
+
+      <div id="mobile-controls" class="mobile-controls">
+        <div class="mobile-cluster">
+          <div id="mobile-pad" class="mobile-pad" aria-label="Movement pad">
+            <div id="mobile-stick" class="mobile-stick"></div>
+          </div>
+        </div>
+        <div class="mobile-buttons">
+          <button id="mobile-lens" class="mobile-btn" type="button">Lens</button>
+          <button id="mobile-observe" class="mobile-btn" type="button">Observe</button>
+          <button id="mobile-isolate" class="mobile-btn" type="button">Isolate</button>
+          <button id="mobile-imprint" class="mobile-btn" type="button">Imprint</button>
+          <button id="mobile-use" class="mobile-btn primary" type="button">Use</button>
+        </div>
       </div>
     </div>
 
@@ -676,6 +844,14 @@
         logContainer: document.getElementById("log-container"),
         hint: document.getElementById("hint"),
         soundtrack: document.getElementById("soundtrack"),
+        mobileControls: document.getElementById("mobile-controls"),
+        mobilePad: document.getElementById("mobile-pad"),
+        mobileStick: document.getElementById("mobile-stick"),
+        mobileLens: document.getElementById("mobile-lens"),
+        mobileObserve: document.getElementById("mobile-observe"),
+        mobileIsolate: document.getElementById("mobile-isolate"),
+        mobileImprint: document.getElementById("mobile-imprint"),
+        mobileUse: document.getElementById("mobile-use"),
       };
 
       const logosState = {
@@ -739,6 +915,9 @@
         completed: false,
         activeFlight: null,
         isPointerInside: false,
+        touchLook: null,
+        movePadPointerId: null,
+        moveVector: { x: 0, y: 0 },
       };
 
       const researchState = {
@@ -969,6 +1148,7 @@
         maxZ: 4.9,
       };
 
+      const isCoarsePointer = window.matchMedia("(pointer: coarse)").matches || navigator.maxTouchPoints > 0;
       let soundtrackUnlocked = false;
 
       buildEnvironment();
@@ -1464,6 +1644,18 @@
         window.addEventListener("keydown", onKeyDown);
         window.addEventListener("keyup", onKeyUp);
         window.addEventListener("resize", onResize);
+        ui.mobilePad.addEventListener("pointerdown", onMobilePadDown);
+        ui.mobilePad.addEventListener("pointermove", onMobilePadMove);
+        ui.mobilePad.addEventListener("pointerup", onMobilePadUp);
+        ui.mobilePad.addEventListener("pointercancel", onMobilePadUp);
+        ui.mobileLens.addEventListener("click", () => {
+          logosState.isLensActive = !logosState.isLensActive;
+          syncUi();
+        });
+        ui.mobileObserve.addEventListener("click", () => setMode("observe"));
+        ui.mobileIsolate.addEventListener("click", () => setMode("isolate"));
+        ui.mobileImprint.addEventListener("click", () => setMode("imprint"));
+        ui.mobileUse.addEventListener("click", triggerPrimaryAction);
       }
 
       function startExperience() {
@@ -1521,20 +1713,17 @@
         }
 
         if (key === "1") {
-          runtime.mode = "observe";
-          syncUi();
+          setMode("observe");
           return;
         }
 
         if (key === "2") {
-          runtime.mode = "isolate";
-          syncUi();
+          setMode("isolate");
           return;
         }
 
         if (key === "3") {
-          runtime.mode = "imprint";
-          syncUi();
+          setMode("imprint");
           return;
         }
 
@@ -1576,6 +1765,12 @@
         if (event.button !== 0) {
           return;
         }
+        if (event.pointerType === "touch") {
+          runtime.touchLook = {
+            x: event.clientX,
+            y: event.clientY,
+          };
+        }
         runtime.pointerDown = {
           x: event.clientX,
           y: event.clientY,
@@ -1605,6 +1800,10 @@
         }
 
         runtime.hovered = targetKey;
+        if (runtime.selected === targetKey && event.pointerType === "touch") {
+          triggerPrimaryAction();
+          return;
+        }
         runtime.selected = targetKey;
 
         syncUi();
@@ -1618,10 +1817,55 @@
         renderer.domElement.style.cursor = "default";
       }
 
+      function onMobilePadDown(event) {
+        runtime.movePadPointerId = event.pointerId;
+        ui.mobilePad.setPointerCapture(event.pointerId);
+        updateMobilePadVector(event);
+      }
+
+      function onMobilePadMove(event) {
+        if (runtime.movePadPointerId !== event.pointerId) {
+          return;
+        }
+        updateMobilePadVector(event);
+      }
+
+      function onMobilePadUp(event) {
+        if (runtime.movePadPointerId !== event.pointerId) {
+          return;
+        }
+        runtime.movePadPointerId = null;
+        runtime.moveVector.x = 0;
+        runtime.moveVector.y = 0;
+        ui.mobileStick.style.transform = "translate(0px, 0px)";
+        ui.mobilePad.releasePointerCapture(event.pointerId);
+      }
+
+      function updateMobilePadVector(event) {
+        const bounds = ui.mobilePad.getBoundingClientRect();
+        const centerX = bounds.left + bounds.width / 2;
+        const centerY = bounds.top + bounds.height / 2;
+        const dx = event.clientX - centerX;
+        const dy = event.clientY - centerY;
+        const radius = bounds.width * 0.34;
+        const length = Math.hypot(dx, dy) || 1;
+        const clamped = Math.min(radius, length);
+        const nx = (dx / length) * (clamped / radius);
+        const ny = (dy / length) * (clamped / radius);
+        runtime.moveVector.x = nx;
+        runtime.moveVector.y = ny;
+        ui.mobileStick.style.transform = `translate(${nx * radius}px, ${ny * radius}px)`;
+      }
+
       function positionViewportCursor() {
         ui.viewportCursor.style.left = `${runtime.pointerScreen.x}px`;
         ui.viewportCursor.style.top = `${runtime.pointerScreen.y}px`;
         ui.viewportCursor.style.opacity = runtime.isPointerInside && !runtime.uiHidden ? "1" : "0";
+      }
+
+      function setMode(mode) {
+        runtime.mode = mode;
+        syncUi();
       }
 
       function getInteractiveRoot(object) {
@@ -2027,10 +2271,14 @@
         renderer.domElement.style.cursor = runtime.hovered ? "pointer" : "default";
         ui.viewportCursor.style.opacity = runtime.isPointerInside && !runtime.uiHidden ? "1" : "0";
 
-        outlinePass.selectedObjects = runtime.hovered
-          ? [runtime.hovered ? world.entities[runtime.hovered]?.root : null].filter(Boolean)
-          : [];
+        const outlinedKey = runtime.hovered || runtime.selected;
+        outlinePass.selectedObjects = outlinedKey ? [world.entities[outlinedKey]?.root].filter(Boolean) : [];
         lensPass.uniforms.amount.value = logosState.isLensActive ? 1 : 0;
+        ui.mobileControls.classList.toggle("hidden", runtime.uiHidden || !isCoarsePointer);
+        ui.mobileLens.classList.toggle("active", logosState.isLensActive);
+        ui.mobileObserve.classList.toggle("active", runtime.mode === "observe");
+        ui.mobileIsolate.classList.toggle("active", runtime.mode === "isolate");
+        ui.mobileImprint.classList.toggle("active", runtime.mode === "imprint");
 
         syncLabels();
         syncTargetPanel();
@@ -2314,6 +2562,9 @@
         ui.extractBtn.textContent = action.label;
         ui.extractBtn.disabled = !action.enabled;
         ui.extractBtn.classList.toggle("enabled", action.enabled);
+        ui.mobileUse.textContent = action.label.replace(/[\[\]]/g, "").trim() || "Use";
+        ui.mobileUse.disabled = !action.enabled;
+        ui.mobileUse.classList.toggle("active", action.enabled);
       }
 
       function getActiveTargetKey() {
@@ -2419,7 +2670,7 @@
       }
 
       function updateMovement(dt) {
-        if (!runtime.keys.size) {
+        if (!runtime.keys.size && !runtime.moveVector.x && !runtime.moveVector.y) {
           return;
         }
 
@@ -2445,6 +2696,18 @@
         }
         if (runtime.keys.has("a")) {
           delta.sub(right);
+        }
+        if (runtime.moveVector.y < -0.08) {
+          delta.add(forward.clone().multiplyScalar(-runtime.moveVector.y));
+        }
+        if (runtime.moveVector.y > 0.08) {
+          delta.sub(forward.clone().multiplyScalar(runtime.moveVector.y));
+        }
+        if (runtime.moveVector.x > 0.08) {
+          delta.add(right.clone().multiplyScalar(runtime.moveVector.x));
+        }
+        if (runtime.moveVector.x < -0.08) {
+          delta.sub(right.clone().multiplyScalar(-runtime.moveVector.x));
         }
 
         if (delta.lengthSq() === 0) {
