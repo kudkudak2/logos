@@ -1,0 +1,2487 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Logos: Master Vertical Slice</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #111111;
+        --panel: rgba(17, 17, 17, 0.82);
+        --panel-soft: rgba(17, 17, 17, 0.56);
+        --brass: #887755;
+        --gold: #ffb703;
+        --gold-soft: rgba(255, 183, 3, 0.16);
+        --ink: #ded8c8;
+        --muted: #8e8a81;
+        --danger: #c5dffc;
+        --white: #f6f1e7;
+        --shadow: rgba(0, 0, 0, 0.45);
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #050505;
+        color: var(--ink);
+        font-family: "Courier New", "Fira Code", monospace;
+      }
+
+      body {
+        background:
+          radial-gradient(circle at top, rgba(255, 183, 3, 0.08), transparent 28%),
+          linear-gradient(180deg, #0b0b0b 0%, #050505 100%);
+      }
+
+      #app,
+      #viewport,
+      canvas {
+        width: 100%;
+        height: 100%;
+      }
+
+      #app {
+        position: relative;
+      }
+
+      #viewport {
+        position: absolute;
+        inset: 0;
+      }
+
+      .overlay {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        background: rgba(6, 6, 6, 0.74);
+        backdrop-filter: blur(8px);
+        z-index: 20;
+      }
+
+      .overlay.hidden,
+      .ui-hidden .instrument,
+      .ui-hidden .status-strip,
+      .ui-hidden .hint,
+      .hidden {
+        display: none;
+      }
+
+      .overlay-panel {
+        width: min(900px, 100%);
+        padding: 28px;
+        border: 1px solid rgba(136, 119, 85, 0.5);
+        background:
+          linear-gradient(135deg, rgba(17, 17, 17, 0.96), rgba(31, 26, 18, 0.94)),
+          #111111;
+        box-shadow: 0 24px 80px var(--shadow);
+      }
+
+      .overlay-panel h1 {
+        font-size: clamp(40px, 8vw, 84px);
+        letter-spacing: 0.2em;
+        color: var(--gold);
+      }
+
+      .overlay-panel .subhead {
+        margin-top: 12px;
+        max-width: 760px;
+        font-size: 18px;
+        line-height: 1.65;
+        color: var(--ink);
+      }
+
+      .overlay-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 20px;
+      }
+
+      .overlay-card,
+      .instrument,
+      .status-strip,
+      .hint {
+        border: 1px solid rgba(136, 119, 85, 0.45);
+        background: var(--panel);
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
+      }
+
+      .overlay-card {
+        padding: 14px;
+        line-height: 1.55;
+        color: var(--muted);
+      }
+
+      .eyebrow {
+        font-size: 11px;
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        color: var(--gold);
+      }
+
+      .overlay-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 18px;
+      }
+
+      button {
+        appearance: none;
+        border: 1px solid rgba(136, 119, 85, 0.7);
+        background: linear-gradient(180deg, rgba(255, 183, 3, 0.14), rgba(136, 119, 85, 0.12));
+        color: var(--ink);
+        font: inherit;
+        letter-spacing: 0.04em;
+        cursor: pointer;
+        transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+      }
+
+      button:hover:not(:disabled) {
+        transform: translateY(-1px);
+        background: linear-gradient(180deg, rgba(255, 183, 3, 0.2), rgba(136, 119, 85, 0.16));
+        border-color: rgba(255, 183, 3, 0.58);
+      }
+
+      button:disabled {
+        opacity: 0.3;
+        cursor: default;
+      }
+
+      #start-btn,
+      #extract-btn,
+      #ui-btn {
+        padding: 12px 16px;
+      }
+
+      .status-strip {
+        position: absolute;
+        top: 16px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        width: min(720px, calc(100vw - 32px));
+        padding: 10px 14px;
+        z-index: 12;
+        background: var(--panel-soft);
+        backdrop-filter: blur(6px);
+      }
+
+      .status-brand {
+        color: var(--gold);
+        letter-spacing: 0.22em;
+      }
+
+      .status-copy {
+        flex: 1;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .status-state {
+        padding: 6px 10px;
+        border: 1px solid rgba(255, 183, 3, 0.24);
+        color: var(--ink);
+      }
+
+      .instrument {
+        position: absolute;
+        bottom: 18px;
+        width: min(340px, calc(50vw - 24px));
+        padding: 14px;
+        z-index: 12;
+        background: rgba(17, 17, 17, 0.68);
+        backdrop-filter: blur(7px);
+      }
+
+      .instrument-left {
+        left: 18px;
+      }
+
+      .instrument-right {
+        right: 18px;
+      }
+
+      .instrument-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: baseline;
+      }
+
+      .instrument-title {
+        color: var(--ink);
+        font-size: 16px;
+      }
+
+      .instrument-body {
+        margin-top: 12px;
+      }
+
+      .surface-line,
+      .story-line,
+      .objective-line,
+      .hint-line {
+        line-height: 1.6;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .story-line {
+        margin-top: 10px;
+        min-height: 90px;
+        color: var(--ink);
+      }
+
+      .story-line em {
+        color: var(--gold);
+        font-style: normal;
+      }
+
+      .extract-button {
+        width: 100%;
+        margin-top: 14px;
+        padding: 14px;
+        color: var(--gold);
+        text-transform: uppercase;
+      }
+
+      .extract-button.enabled {
+        box-shadow: inset 0 0 24px rgba(255, 183, 3, 0.08);
+      }
+
+      .belt {
+        display: flex;
+        gap: 12px;
+        margin-top: 14px;
+      }
+
+      .slot {
+        position: relative;
+        flex: 1;
+        min-height: 92px;
+        padding: 12px 10px;
+        border: 1px solid rgba(136, 119, 85, 0.6);
+        border-radius: 999px;
+        background: radial-gradient(circle at center, rgba(255, 183, 3, 0.08), transparent 72%);
+        color: var(--muted);
+        text-align: center;
+        cursor: pointer;
+        transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+      }
+
+      .slot:hover {
+        transform: translateY(-1px);
+      }
+
+      .slot.active {
+        border-color: rgba(255, 183, 3, 0.95);
+        box-shadow: 0 0 22px rgba(255, 183, 3, 0.18), inset 0 0 24px rgba(255, 183, 3, 0.15);
+        color: var(--gold);
+      }
+
+      .slot-label {
+        margin-top: 16px;
+        font-size: 11px;
+        line-height: 1.35;
+        word-break: break-word;
+      }
+
+      .slot-index {
+        position: absolute;
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 10px;
+        color: var(--muted);
+      }
+
+      .payload {
+        margin-top: 14px;
+        padding: 10px;
+        border: 1px solid rgba(255, 183, 3, 0.18);
+        background: var(--gold-soft);
+        color: var(--ink);
+        font-size: 12px;
+        line-height: 1.5;
+        min-height: 62px;
+      }
+
+      .hint {
+        position: absolute;
+        left: 50%;
+        bottom: 18px;
+        transform: translateX(-50%);
+        width: min(420px, calc(100vw - 380px));
+        padding: 10px 12px;
+        z-index: 12;
+        font-size: 12px;
+        line-height: 1.55;
+        color: var(--muted);
+        background: rgba(17, 17, 17, 0.58);
+        backdrop-filter: blur(6px);
+      }
+
+      .label-tag {
+        color: var(--gold);
+      }
+
+      .log-container {
+        margin-top: 12px;
+        display: grid;
+        gap: 8px;
+      }
+
+      .log-entry {
+        padding: 8px 10px;
+        border-left: 2px solid rgba(255, 183, 3, 0.36);
+        background: rgba(255, 255, 255, 0.02);
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .story-label {
+        padding: 8px 10px;
+        max-width: 220px;
+        border: 1px solid rgba(255, 183, 3, 0.34);
+        background: rgba(17, 17, 17, 0.78);
+        color: var(--gold);
+        font-family: "Courier New", monospace;
+        font-size: 12px;
+        line-height: 1.45;
+        text-shadow: 0 0 12px rgba(255, 183, 3, 0.2);
+        white-space: normal;
+      }
+
+      .story-label.hidden {
+        display: none;
+      }
+
+      .viewport-cursor {
+        position: absolute;
+        width: 28px;
+        height: 28px;
+        margin-left: -14px;
+        margin-top: -14px;
+        border: 1px solid rgba(222, 216, 200, 0.42);
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 13;
+        transition: transform 120ms ease, border-color 120ms ease, opacity 120ms ease;
+      }
+
+      .viewport-cursor::before,
+      .viewport-cursor::after {
+        content: "";
+        position: absolute;
+        background: rgba(222, 216, 200, 0.42);
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+      }
+
+      .viewport-cursor::before {
+        width: 12px;
+        height: 1px;
+      }
+
+      .viewport-cursor::after {
+        width: 1px;
+        height: 12px;
+      }
+
+      .viewport-cursor.engaged {
+        transform: scale(1.22);
+        border-color: rgba(255, 183, 3, 0.92);
+      }
+
+      .viewport-cursor.engaged::before,
+      .viewport-cursor.engaged::after {
+        background: rgba(255, 183, 3, 0.92);
+      }
+
+      .target-chip {
+        margin-top: 10px;
+        padding: 8px 10px;
+        border: 1px solid rgba(255, 183, 3, 0.18);
+        background: rgba(255, 183, 3, 0.08);
+        color: var(--ink);
+        font-size: 12px;
+        line-height: 1.45;
+        min-height: 48px;
+      }
+
+      .lens-indicator {
+        color: var(--gold);
+      }
+
+      .canvas-shake {
+        animation: shake 180ms linear;
+      }
+
+      @keyframes shake {
+        0% { transform: translate(0, 0); }
+        20% { transform: translate(-6px, 2px); }
+        40% { transform: translate(5px, -2px); }
+        60% { transform: translate(-3px, 2px); }
+        80% { transform: translate(3px, -1px); }
+        100% { transform: translate(0, 0); }
+      }
+
+      .flying-word {
+        position: absolute;
+        left: 0;
+        top: 0;
+        z-index: 25;
+        padding: 6px 8px;
+        border: 1px solid rgba(255, 183, 3, 0.7);
+        background: rgba(17, 17, 17, 0.9);
+        color: var(--gold);
+        font-size: 12px;
+        pointer-events: none;
+        box-shadow: 0 0 20px rgba(255, 183, 3, 0.2);
+      }
+
+      .epiphany {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        z-index: 30;
+        pointer-events: none;
+        opacity: 0;
+        background: radial-gradient(circle, rgba(246, 241, 231, 0.98), rgba(255, 183, 3, 0.72));
+        transition: opacity 1200ms ease;
+      }
+
+      .epiphany.active {
+        opacity: 1;
+      }
+
+      .epiphany-copy {
+        text-align: center;
+        color: #4a3510;
+        text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+      }
+
+      .epiphany-copy h2 {
+        font-family: "Iowan Old Style", "Palatino Linotype", serif;
+        font-size: clamp(34px, 5vw, 72px);
+        letter-spacing: 0.08em;
+      }
+
+      .epiphany-copy p {
+        margin-top: 10px;
+        font-family: "Iowan Old Style", "Palatino Linotype", serif;
+        font-size: 20px;
+      }
+
+      @media (max-width: 920px) {
+        .overlay-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .status-strip {
+          width: calc(100vw - 24px);
+        }
+
+        .instrument {
+          width: min(300px, calc(50vw - 20px));
+          bottom: 14px;
+        }
+
+        .hint {
+          width: min(320px, calc(100vw - 48px));
+          bottom: 128px;
+        }
+      }
+
+      @media (max-width: 720px) {
+        .instrument {
+          width: calc(100vw - 28px);
+        }
+
+        .instrument-left {
+          left: 14px;
+          right: 14px;
+          bottom: 146px;
+        }
+
+        .instrument-right {
+          left: 14px;
+          right: 14px;
+          bottom: 14px;
+        }
+
+        .hint {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <div id="viewport"></div>
+      <audio id="soundtrack" src="./The_Clockmaker_s_Proof.mp3" preload="auto" loop autoplay></audio>
+
+      <div id="intro" class="overlay">
+        <div class="overlay-panel">
+          <div class="eyebrow">Master Vertical Slice</div>
+          <h1>LOGOS</h1>
+          <p class="subhead">
+            In this world, God is not a ruler but a perfectly compressed sentence. Matter is what remains after that sentence
+            unzips into time. The Scriptorium is sealed because grief has become architecture. You are not here to cast spells.
+            You are here to perform syntactic surgery on reality.
+          </p>
+          <div class="overlay-grid">
+            <div class="overlay-card">
+              <div class="eyebrow">Axiom</div>
+              The Logos is a point of absolute compression. Every object is a noisy decompression of a truer, shorter meaning.
+            </div>
+            <div class="overlay-card">
+              <div class="eyebrow">Method</div>
+              Activate the Lens, read the hidden stories, extract a concept from the mirror, load it into the Astrolabe, and
+              impart it into the correct target.
+            </div>
+            <div class="overlay-card">
+              <div class="eyebrow">Controls</div>
+              <span class="label-tag">WASD</span> walks around the room.
+              <span class="label-tag">Left Drag</span> rotates the view. <span class="label-tag">Left Click</span> selects an object.
+              <span class="label-tag">1</span> Observe. <span class="label-tag">2</span> Isolate. <span class="label-tag">3</span> Imprint.
+              <span class="label-tag">E</span> uses the current instrument. <span class="label-tag">Space</span> toggles Lens Mode.
+              <span class="label-tag">Tab</span> hides the interface.
+            </div>
+            <div class="overlay-card">
+              <div class="eyebrow">Objective</div>
+              Open the shutter, extract <span class="label-tag">MEMORY_OF_LIGHT</span>, awaken the seed into a bloom, then use
+              <span class="label-tag">CONCEPT_OF_MORNING</span> to resolve the roots and open the door.
+            </div>
+          </div>
+          <div class="overlay-actions">
+            <button id="start-btn" type="button">Enter the Scriptorium</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="epiphany" class="epiphany">
+        <div class="epiphany-copy">
+          <h2>EPIPHANY ACHIEVED</h2>
+          <p>The Logos unspools.</p>
+        </div>
+      </div>
+
+      <div id="status-strip" class="status-strip">
+        <div class="status-brand">LOGOS</div>
+        <div id="objective-copy" class="status-copy">
+          The universe is a lossy decompression. Read its syntax before you cut it.
+        </div>
+        <div id="lens-state" class="status-state">Lens Inactive</div>
+        <div id="mode-state" class="status-state">Observe</div>
+        <button id="ui-btn" type="button">Hide UI</button>
+      </div>
+
+      <div id="viewport-cursor" class="viewport-cursor"></div>
+
+      <aside id="astrolabe" class="instrument instrument-left">
+        <div class="instrument-header">
+          <div>
+            <div class="eyebrow">Grammar Astrolabe</div>
+            <div id="target-name" class="instrument-title">No target stabilized</div>
+          </div>
+          <div id="target-mode" class="eyebrow">Surface</div>
+        </div>
+        <div class="instrument-body">
+          <div id="surface-copy" class="surface-line">Walk with WASD. Click an object to stabilize it. Use Observe, Isolate, and Imprint to work on its syntax.</div>
+          <div id="story-copy" class="story-line">No true story is currently resolved.</div>
+          <div id="target-chip" class="target-chip">No object selected.</div>
+          <button id="extract-btn" class="extract-button" type="button" disabled>[ SELECT AN OBJECT ]</button>
+        </div>
+      </aside>
+
+      <aside id="lexicon" class="instrument instrument-right">
+        <div class="instrument-header">
+          <div>
+            <div class="eyebrow">Lexicon Belt</div>
+            <div class="instrument-title">Concept Vials</div>
+          </div>
+          <div id="loaded-copy" class="eyebrow">Astrolabe idle</div>
+        </div>
+        <div id="belt" class="belt"></div>
+        <div id="payload-copy" class="payload">No concept is loaded. Extract a syntagm and chamber it here.</div>
+        <div class="log-container" id="log-container"></div>
+      </aside>
+
+      <div id="hint" class="hint">
+        <span class="label-tag">Hint:</span>
+        Open the shutter so the mirror has a present witness. A concept cannot be plucked from a story that is not currently
+        instantiated.
+      </div>
+    </div>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "./node_modules/three/build/three.module.js",
+          "three/addons/": "./node_modules/three/examples/jsm/"
+        }
+      }
+    </script>
+
+    <script type="module">
+      import * as THREE from "three";
+      import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+      import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+      import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+      import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
+      import { OutlinePass } from "three/addons/postprocessing/OutlinePass.js";
+      import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+      import { CSS2DRenderer, CSS2DObject } from "three/addons/renderers/CSS2DRenderer.js";
+
+      const ui = {
+        app: document.getElementById("app"),
+        viewport: document.getElementById("viewport"),
+        intro: document.getElementById("intro"),
+        startBtn: document.getElementById("start-btn"),
+        epiphany: document.getElementById("epiphany"),
+        statusStrip: document.getElementById("status-strip"),
+        objectiveCopy: document.getElementById("objective-copy"),
+        lensState: document.getElementById("lens-state"),
+        modeState: document.getElementById("mode-state"),
+        uiBtn: document.getElementById("ui-btn"),
+        viewportCursor: document.getElementById("viewport-cursor"),
+        targetName: document.getElementById("target-name"),
+        targetMode: document.getElementById("target-mode"),
+        surfaceCopy: document.getElementById("surface-copy"),
+        storyCopy: document.getElementById("story-copy"),
+        targetChip: document.getElementById("target-chip"),
+        extractBtn: document.getElementById("extract-btn"),
+        belt: document.getElementById("belt"),
+        loadedCopy: document.getElementById("loaded-copy"),
+        payloadCopy: document.getElementById("payload-copy"),
+        logContainer: document.getElementById("log-container"),
+        hint: document.getElementById("hint"),
+        soundtrack: document.getElementById("soundtrack"),
+      };
+
+      const logosState = {
+        inventory: [],
+        loadedConcept: null,
+        isLensActive: false,
+        entities: {
+          mirror: {
+            id: "mirror_mesh",
+            surfaceName: "Tarnished Mirror",
+            trueStory: "An unyielding memory of light.",
+            coreStory: "At its core, the mirror is not glass but witness: an organ that compresses whatever it most recently beheld into a preservable shard of reality.",
+            deadStory: "A blind piece of lead.",
+            extractableConcept: "MEMORY_OF_LIGHT",
+            isExtracted: false,
+            observedFragments: 0,
+          },
+          seed: {
+            id: "seed_mesh",
+            surfaceName: "Petrified Seed",
+            trueStory: "A coiled spring of potential waiting for dawn.",
+            coreStory: "At its core, the seed is delayed becoming. It does not need heat or force, only the right proof that a beginning has arrived.",
+            isTransformed: false,
+            observedFragments: 0,
+            impartLogic: {
+              requiredConcept: "MEMORY_OF_LIGHT",
+              newSurfaceName: "Bloom of Captured Morning",
+              newTrueStory: "The eternal arrival of a new dawn.",
+              newCoreStory: "At its core, the bloom is a self-renewing beginning: potential taught to remember the logic of morning without needing the sun itself.",
+              newExtractableConcept: "CONCEPT_OF_MORNING",
+            },
+          },
+          roots: {
+            id: "roots_mesh",
+            surfaceName: "Crystallized Roots",
+            trueStory: "A protective embrace calcified out of grief.",
+            coreStory: "At their core, the roots are an unfinished act of protection. Grief hardened the act until care became prison.",
+            isTransformed: false,
+            observedFragments: 0,
+            impartLogic: {
+              requiredConcept: "CONCEPT_OF_MORNING",
+              newTrueStory: "The grief is resolved by the morning. The path is open.",
+              newCoreStory: "At their core, the roots can finally distinguish protection from captivity. Renewal lets them release what grief would only keep.",
+            },
+          },
+        },
+      };
+
+      const runtime = {
+        uiHidden: false,
+        hovered: null,
+        selected: null,
+        mode: "observe",
+        pointer: new THREE.Vector2(0, 0),
+        pointerScreen: { x: window.innerWidth * 0.5, y: window.innerHeight * 0.5 },
+        pointerDown: null,
+        keys: new Set(),
+        interactionLog: [],
+        windowOpen: false,
+        doorOpen: false,
+        completed: false,
+        activeFlight: null,
+        isPointerInside: false,
+      };
+
+      const researchState = {
+        mirror: 0,
+        seed: 0,
+        roots: 0,
+        shutter: 0,
+        door: 0,
+      };
+
+      const conceptDescriptions = {
+        MEMORY_OF_LIGHT: "A retained witness of illumination, held against darkness.",
+        CONCEPT_OF_MORNING: "The eternal arrival of a new dawn, strong enough to resolve calcified grief.",
+      };
+
+      const modeLabels = {
+        observe: "Observe",
+        isolate: "Isolate",
+        imprint: "Imprint",
+      };
+
+      const loreNotes = {
+        mirror: {
+          surface:
+            "A standing silver mirror. Its surface is still bright enough to remember the room, but only if the room gives it something worth remembering.",
+          hint: "Silver is a reliable archive. It stores concepts after matter stops being useful.",
+        },
+        seed: {
+          surface: "A rough black seed, petrified into a mineral knot.",
+          hint: "Potential does not need heat. It needs the sentence that counts as beginning.",
+        },
+        roots: {
+          surface: "Pale crystalline roots have grown over the door and frozen there.",
+          hint: "This barrier is not structural. It is emotional architecture.",
+        },
+        shutter: {
+          surface: "A narrow slit in the wall. It decides which morning is permitted to enter the room.",
+          hint: "A concept must be instantiated before it can be plucked.",
+        },
+        door: {
+          surface: "A scholar's door, sealed not by lockwork but by a room that has not yet finished grieving.",
+          hint: "The door is downstream of the roots. Solve the cause, not the threshold.",
+        },
+      };
+
+      const researchFragments = {
+        mirror: [
+          () => "Silver is only the shell. The mirror's actual function is to preserve witness.",
+          () => "Reflection is incidental. What matters is the last event held in compression.",
+          () => (runtime.windowOpen ? "Current witness: a narrow incision of morning light." : null),
+        ],
+        seed: [
+          () => "The seed is not dead; it is delayed.",
+          () => "Its delay is not caused by cold, age, or damage.",
+          () => "It is waiting for a proof-class event: dawn, not heat.",
+        ],
+        roots: [
+          () => "The roots began as protection, not hostility.",
+          () => "Protection calcified when grief could not accept change.",
+          () => "They will not answer to force. They require renewal to release their hold.",
+        ],
+        shutter: [
+          () => "The slit is an instrument, not a window. It admits only a thin frequency of morning.",
+        ],
+        door: [
+          () => "The threshold is not locked. It is waiting for the room's argument to resolve.",
+        ],
+      };
+
+      class Synthesizer {
+        constructor() {
+          this.context = null;
+          this.master = null;
+        }
+
+        ensureContext() {
+          if (!this.context) {
+            this.context = new (window.AudioContext || window.webkitAudioContext)();
+            this.master = this.context.createGain();
+            this.master.gain.value = 0.22;
+            this.master.connect(this.context.destination);
+          }
+          if (this.context.state === "suspended") {
+            this.context.resume();
+          }
+        }
+
+        pulse({ type = "sine", frequency = 220, duration = 0.2, attack = 0.003, decay = 0.15, gain = 0.3, detune = 0 }) {
+          this.ensureContext();
+          const now = this.context.currentTime;
+          const osc = this.context.createOscillator();
+          const amp = this.context.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(frequency, now);
+          osc.detune.setValueAtTime(detune, now);
+          amp.gain.setValueAtTime(0.0001, now);
+          amp.gain.linearRampToValueAtTime(gain, now + attack);
+          amp.gain.exponentialRampToValueAtTime(0.0001, now + duration + decay);
+          osc.connect(amp);
+          amp.connect(this.master);
+          osc.start(now);
+          osc.stop(now + duration + decay + 0.05);
+        }
+
+        clack() {
+          this.pulse({ type: "triangle", frequency: 1580, duration: 0.015, decay: 0.08, gain: 0.18 });
+          this.pulse({ type: "triangle", frequency: 1120, duration: 0.02, decay: 0.1, gain: 0.08, detune: -14 });
+        }
+
+        chamber() {
+          this.pulse({ type: "square", frequency: 188, duration: 0.03, decay: 0.12, gain: 0.14 });
+          this.pulse({ type: "square", frequency: 132, duration: 0.05, decay: 0.16, gain: 0.12, detune: 9 });
+        }
+
+        thud() {
+          this.pulse({ type: "sine", frequency: 40, duration: 0.26, decay: 0.55, gain: 0.45 });
+          this.pulse({ type: "sawtooth", frequency: 58, duration: 0.18, decay: 0.36, gain: 0.06, detune: -8 });
+        }
+
+        swell() {
+          this.ensureContext();
+          const now = this.context.currentTime;
+          [220, 277.18, 329.63].forEach((frequency, index) => {
+            const osc = this.context.createOscillator();
+            const amp = this.context.createGain();
+            osc.type = "sine";
+            osc.frequency.setValueAtTime(frequency, now);
+            amp.gain.setValueAtTime(0.0001, now);
+            amp.gain.linearRampToValueAtTime(0.08, now + 0.8 + index * 0.05);
+            amp.gain.exponentialRampToValueAtTime(0.0001, now + 2.2);
+            osc.connect(amp);
+            amp.connect(this.master);
+            osc.start(now);
+            osc.stop(now + 2.3);
+          });
+        }
+      }
+
+      const synth = new Synthesizer();
+
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x060606);
+      scene.fog = new THREE.Fog(0x060606, 6, 18);
+
+      const camera = new THREE.PerspectiveCamera(46, window.innerWidth / window.innerHeight, 0.1, 50);
+      camera.position.set(0, 2.35, 6.4);
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      ui.viewport.appendChild(renderer.domElement);
+
+      const labelRenderer = new CSS2DRenderer();
+      labelRenderer.setSize(window.innerWidth, window.innerHeight);
+      labelRenderer.domElement.style.position = "absolute";
+      labelRenderer.domElement.style.inset = "0";
+      labelRenderer.domElement.style.pointerEvents = "none";
+      ui.viewport.appendChild(labelRenderer.domElement);
+
+      const controls = new OrbitControls(camera, renderer.domElement);
+      controls.enablePan = false;
+      controls.enableDamping = true;
+      controls.minDistance = 4;
+      controls.maxDistance = 9;
+      controls.minPolarAngle = 0.8;
+      controls.maxPolarAngle = 1.46;
+      controls.target.set(0, 1.35, 0.1);
+      controls.mouseButtons.LEFT = THREE.MOUSE.ROTATE;
+      controls.mouseButtons.RIGHT = null;
+
+      const composer = new EffectComposer(renderer);
+      const renderPass = new RenderPass(scene, camera);
+      composer.addPass(renderPass);
+
+      const lensShader = {
+        uniforms: {
+          tDiffuse: { value: null },
+          amount: { value: 0 },
+        },
+        vertexShader: `
+          varying vec2 vUv;
+          void main() {
+            vUv = uv;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `,
+        fragmentShader: `
+          uniform sampler2D tDiffuse;
+          uniform float amount;
+          varying vec2 vUv;
+          void main() {
+            vec4 color = texture2D(tDiffuse, vUv);
+            float gray = dot(color.rgb, vec3(0.299, 0.587, 0.114));
+            vec3 desat = mix(color.rgb, vec3(gray), amount);
+            desat *= mix(1.0, 0.42, amount);
+            desat += vec3(0.08, 0.06, 0.12) * amount;
+            gl_FragColor = vec4(desat, color.a);
+          }
+        `,
+      };
+      const lensPass = new ShaderPass(lensShader);
+      composer.addPass(lensPass);
+
+      const outlinePass = new OutlinePass(new THREE.Vector2(window.innerWidth, window.innerHeight), scene, camera);
+      outlinePass.edgeStrength = 4.6;
+      outlinePass.edgeGlow = 0.7;
+      outlinePass.visibleEdgeColor.set("#ffb703");
+      outlinePass.hiddenEdgeColor.set("#6d4d05");
+      composer.addPass(outlinePass);
+      composer.addPass(new OutputPass());
+
+      const raycaster = new THREE.Raycaster();
+      const clock = new THREE.Clock();
+
+      const world = {
+        entities: {},
+        labels: {},
+        rootSegments: [],
+      };
+
+      const MOVEMENT = {
+        speed: 2.8,
+        minX: -3.9,
+        maxX: 3.9,
+        minZ: -4.9,
+        maxZ: 4.9,
+      };
+
+      let soundtrackUnlocked = false;
+
+      buildEnvironment();
+      buildUiSlots();
+      syncUi();
+      attemptAutoplaySoundtrack();
+      animate();
+
+      function buildEnvironment() {
+        const ambient = new THREE.AmbientLight(0x1c1a18, 1.35);
+        scene.add(ambient);
+
+        const hemi = new THREE.HemisphereLight(0x3f4f67, 0x24160d, 0.7);
+        scene.add(hemi);
+
+        const spotlight = new THREE.SpotLight(0xf7d292, 14, 24, 0.46, 0.32, 1.4);
+        spotlight.position.set(0, 5.8, 2.2);
+        spotlight.target.position.set(0, 1, -0.2);
+        spotlight.castShadow = true;
+        spotlight.shadow.mapSize.set(1024, 1024);
+        scene.add(spotlight, spotlight.target);
+
+        const backWash = new THREE.SpotLight(0x6f88b4, 6, 22, 0.8, 0.45, 1.2);
+        backWash.position.set(0, 4.8, 4.6);
+        backWash.target.position.set(0, 2.2, -5.6);
+        scene.add(backWash, backWash.target);
+
+        const leftSconceLight = new THREE.PointLight(0xd59c4f, 1.6, 7, 2);
+        leftSconceLight.position.set(-4.2, 2.7, -3.8);
+        scene.add(leftSconceLight);
+
+        const rightSconceLight = new THREE.PointLight(0xd59c4f, 1.4, 7, 2);
+        rightSconceLight.position.set(4.2, 2.7, -3.8);
+        scene.add(rightSconceLight);
+
+        const roomMaterial = new THREE.MeshStandardMaterial({
+          color: 0x26211d,
+          roughness: 0.92,
+          metalness: 0.02,
+          emissive: 0x0a0908,
+        });
+
+        const room = new THREE.Mesh(new THREE.BoxGeometry(10, 6, 12), [
+          roomMaterial,
+          roomMaterial,
+          new THREE.MeshStandardMaterial({ color: 0x14110f, roughness: 0.92, emissive: 0x080706 }),
+          roomMaterial,
+          roomMaterial,
+          roomMaterial,
+        ]);
+        room.material.forEach((material) => {
+          material.side = THREE.BackSide;
+        });
+        room.position.y = 3;
+        room.receiveShadow = true;
+        scene.add(room);
+
+        const rearPanel = new THREE.Mesh(
+          new THREE.PlaneGeometry(5.8, 3.2),
+          new THREE.MeshStandardMaterial({
+            color: 0x2f2a26,
+            roughness: 0.86,
+            emissive: 0x10151f,
+          })
+        );
+        rearPanel.position.set(0, 2.4, -5.86);
+        scene.add(rearPanel);
+
+        const rearHalo = new THREE.Mesh(
+          new THREE.PlaneGeometry(3.2, 1.8),
+          new THREE.MeshBasicMaterial({
+            color: 0x4e648e,
+            transparent: true,
+            opacity: 0.16,
+          })
+        );
+        rearHalo.position.set(0, 2.55, -5.84);
+        scene.add(rearHalo);
+
+        const leftSconce = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.08, 0.08, 0.6, 10),
+          new THREE.MeshStandardMaterial({
+            color: 0x8a6a42,
+            roughness: 0.52,
+            emissive: 0x3f250d,
+          })
+        );
+        leftSconce.rotation.z = Math.PI / 2;
+        leftSconce.position.set(-4.2, 2.7, -3.82);
+        scene.add(leftSconce);
+
+        const rightSconce = leftSconce.clone();
+        rightSconce.position.set(4.2, 2.7, -3.82);
+        scene.add(rightSconce);
+
+        const floorInlay = new THREE.Mesh(
+          new THREE.CircleGeometry(1.7, 48),
+          new THREE.MeshStandardMaterial({
+            color: 0x2c1e11,
+            emissive: 0x1a0f06,
+            roughness: 0.88,
+          })
+        );
+        floorInlay.rotation.x = -Math.PI / 2;
+        floorInlay.position.set(0, 0.02, 0.1);
+        scene.add(floorInlay);
+
+        const pedestal = new THREE.Group();
+        const base = new THREE.Mesh(
+          new THREE.CylinderGeometry(1.1, 1.3, 0.7, 8),
+          new THREE.MeshStandardMaterial({ color: 0x2a231f, roughness: 0.9 })
+        );
+        base.castShadow = true;
+        base.receiveShadow = true;
+        pedestal.add(base);
+
+        const top = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.96, 1.06, 0.18, 8),
+          new THREE.MeshStandardMaterial({ color: 0x3f3327, roughness: 0.76 })
+        );
+        top.position.y = 0.44;
+        top.castShadow = true;
+        top.receiveShadow = true;
+        pedestal.add(top);
+
+        pedestal.position.set(0, 0.34, 0.25);
+        scene.add(pedestal);
+
+        const desk = new THREE.Mesh(
+          new THREE.BoxGeometry(3.4, 0.2, 1.3),
+          new THREE.MeshStandardMaterial({ color: 0x46362d, roughness: 0.84 })
+        );
+        desk.position.set(0, 1.16, 0.15);
+        desk.castShadow = true;
+        desk.receiveShadow = true;
+        scene.add(desk);
+
+        createMirror();
+        createSeed();
+        createDoorAndRoots();
+        createShutter();
+      }
+
+      function createMirror() {
+        const group = new THREE.Group();
+        group.name = "mirror_mesh";
+        group.userData.key = "mirror";
+
+        const frame = new THREE.Mesh(
+          new THREE.BoxGeometry(0.84, 1.18, 0.08),
+          new THREE.MeshStandardMaterial({ color: 0x6f5d49, roughness: 0.62, metalness: 0.12 })
+        );
+        frame.castShadow = true;
+        group.add(frame);
+
+        const surface = new THREE.Mesh(
+          new THREE.BoxGeometry(0.6, 0.9, 0.02),
+          new THREE.MeshStandardMaterial({
+            color: 0xa6b6c7,
+            metalness: 0.96,
+            roughness: 0.06,
+            emissive: 0x202630,
+          })
+        );
+        surface.position.z = 0.052;
+        group.add(surface);
+
+        const stand = new THREE.Mesh(
+          new THREE.BoxGeometry(0.12, 0.46, 0.14),
+          new THREE.MeshStandardMaterial({ color: 0x6f5d49, roughness: 0.72 })
+        );
+        stand.position.set(0, -0.78, -0.06);
+        group.add(stand);
+
+        group.position.set(-0.75, 1.76, 0.03);
+        scene.add(group);
+
+        world.entities.mirror = {
+          key: "mirror",
+          root: group,
+          mesh: surface,
+          defaultMaterial: surface.material.clone(),
+          deadMaterial: new THREE.MeshLambertMaterial({ color: 0x444444 }),
+          label: createStoryLabel("mirror"),
+        };
+      }
+
+      function createSeed() {
+        const group = new THREE.Group();
+        group.name = "seed_mesh";
+        group.userData.key = "seed";
+
+        const seed = new THREE.Mesh(
+          new THREE.IcosahedronGeometry(0.18, 1),
+          new THREE.MeshStandardMaterial({
+            color: 0x1b1715,
+            roughness: 1,
+            metalness: 0,
+          })
+        );
+        seed.castShadow = true;
+        seed.receiveShadow = true;
+        group.add(seed);
+
+        const bloom = new THREE.Mesh(
+          new THREE.TorusKnotGeometry(0.18, 0.06, 96, 14),
+          new THREE.MeshBasicMaterial({ color: 0xffb703 })
+        );
+        bloom.visible = false;
+        bloom.scale.setScalar(0.1);
+        group.add(bloom);
+
+        const glow = new THREE.PointLight(0xffb703, 0, 3.2, 2);
+        glow.position.set(0, 0.2, 0);
+        group.add(glow);
+
+        group.position.set(0.72, 1.38, 0.04);
+        scene.add(group);
+
+        world.entities.seed = {
+          key: "seed",
+          root: group,
+          mesh: seed,
+          bloomMesh: bloom,
+          bloomLight: glow,
+          label: createStoryLabel("seed"),
+        };
+      }
+
+      function createDoorAndRoots() {
+        const doorGroup = new THREE.Group();
+        doorGroup.position.set(0, 0, -5.7);
+        doorGroup.name = "door_mesh";
+        doorGroup.userData.key = "door";
+
+        const frameMaterial = new THREE.MeshStandardMaterial({
+          color: 0x5a4633,
+          roughness: 0.72,
+          metalness: 0.08,
+        });
+
+        const archLeft = new THREE.Mesh(new THREE.BoxGeometry(0.34, 4.6, 0.42), frameMaterial);
+        archLeft.position.set(-1.42, 2.3, -0.04);
+        archLeft.castShadow = true;
+        archLeft.receiveShadow = true;
+        doorGroup.add(archLeft);
+
+        const archRight = archLeft.clone();
+        archRight.position.x = 1.42;
+        doorGroup.add(archRight);
+
+        const archTop = new THREE.Mesh(new THREE.BoxGeometry(3.18, 0.34, 0.48), frameMaterial);
+        archTop.position.set(0, 4.42, -0.04);
+        archTop.castShadow = true;
+        archTop.receiveShadow = true;
+        doorGroup.add(archTop);
+
+        const slab = new THREE.Mesh(
+          new THREE.BoxGeometry(2.28, 4.02, 0.22),
+          new THREE.MeshStandardMaterial({
+            color: 0x3a2a1f,
+            roughness: 0.82,
+            emissive: 0x130d09,
+          })
+        );
+        slab.position.set(0, 2.02, 0);
+        slab.castShadow = true;
+        slab.receiveShadow = true;
+        doorGroup.add(slab);
+
+        const braceMaterial = new THREE.MeshStandardMaterial({
+          color: 0x7a623d,
+          roughness: 0.46,
+          metalness: 0.32,
+          emissive: 0x1b1208,
+        });
+
+        const leftBrace = new THREE.Mesh(new THREE.BoxGeometry(0.16, 3.5, 0.08), braceMaterial);
+        leftBrace.position.set(-0.68, 2.06, 0.14);
+        leftBrace.castShadow = true;
+        doorGroup.add(leftBrace);
+
+        const rightBrace = leftBrace.clone();
+        rightBrace.position.x = 0.68;
+        doorGroup.add(rightBrace);
+
+        const midBrace = new THREE.Mesh(new THREE.BoxGeometry(1.82, 0.16, 0.08), braceMaterial);
+        midBrace.position.set(0, 2.18, 0.14);
+        midBrace.castShadow = true;
+        doorGroup.add(midBrace);
+
+        const sigilRing = new THREE.Mesh(
+          new THREE.TorusGeometry(0.36, 0.03, 12, 44),
+          new THREE.MeshStandardMaterial({
+            color: 0xb78b3a,
+            roughness: 0.28,
+            metalness: 0.62,
+            emissive: 0x3b2508,
+          })
+        );
+        sigilRing.position.set(0, 2.98, 0.14);
+        sigilRing.rotation.x = Math.PI / 2;
+        doorGroup.add(sigilRing);
+
+        const sigilBar = new THREE.Mesh(
+          new THREE.BoxGeometry(0.52, 0.04, 0.04),
+          new THREE.MeshStandardMaterial({
+            color: 0xd7af5a,
+            roughness: 0.24,
+            metalness: 0.68,
+            emissive: 0x4c3110,
+          })
+        );
+        sigilBar.position.set(0, 2.98, 0.16);
+        doorGroup.add(sigilBar);
+
+        const sigilBarVertical = sigilBar.clone();
+        sigilBarVertical.scale.set(0.08, 13, 1);
+        sigilBarVertical.position.set(0, 2.98, 0.16);
+        doorGroup.add(sigilBarVertical);
+
+        const handlePlate = new THREE.Mesh(
+          new THREE.BoxGeometry(0.18, 0.5, 0.06),
+          new THREE.MeshStandardMaterial({
+            color: 0x8c7247,
+            roughness: 0.32,
+            metalness: 0.55,
+          })
+        );
+        handlePlate.position.set(0.9, 1.7, 0.15);
+        doorGroup.add(handlePlate);
+
+        const handle = new THREE.Mesh(
+          new THREE.TorusGeometry(0.09, 0.018, 8, 24, Math.PI),
+          new THREE.MeshStandardMaterial({
+            color: 0xc8a76a,
+            roughness: 0.26,
+            metalness: 0.62,
+          })
+        );
+        handle.position.set(0.9, 1.65, 0.19);
+        handle.rotation.z = Math.PI;
+        doorGroup.add(handle);
+
+        scene.add(doorGroup);
+
+        const rootGroup = new THREE.Group();
+        rootGroup.name = "roots_mesh";
+        rootGroup.userData.key = "roots";
+        rootGroup.position.set(0, 0, -5.46);
+
+        const rootMaterial = new THREE.MeshPhysicalMaterial({
+          color: 0xd6ecff,
+          roughness: 0.16,
+          metalness: 0.02,
+          transmission: 0.2,
+          thickness: 0.2,
+          transparent: true,
+          opacity: 0.9,
+        });
+
+        const definitions = [
+          [-0.8, 1.8, 0.18, 3.5, 0.24, 0],
+          [-0.24, 1.65, 0.16, 3.8, -0.18, 0.14],
+          [0.26, 2.22, 0.14, 3.2, 0.3, -0.18],
+          [0.78, 1.5, 0.16, 2.8, -0.26, 0],
+          [0, 2.2, 0.12, 4.2, 0.02, 0.16],
+        ];
+
+        definitions.forEach(([x, y, radius, height, rotZ, rotX]) => {
+          const segment = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, height, 12), rootMaterial.clone());
+          segment.position.set(x, y, 0);
+          segment.rotation.z = rotZ;
+          segment.rotation.x = rotX;
+          segment.castShadow = true;
+          segment.receiveShadow = true;
+          segment.userData.baseY = y;
+          segment.userData.baseScaleY = 1;
+          rootGroup.add(segment);
+          world.rootSegments.push(segment);
+        });
+
+        scene.add(rootGroup);
+
+        world.entities.roots = {
+          key: "roots",
+          root: rootGroup,
+          mesh: rootGroup,
+          label: createStoryLabel("roots"),
+        };
+
+        world.entities.door = {
+          key: "door",
+          root: doorGroup,
+          mesh: slab,
+          sigil: sigilRing,
+        };
+      }
+
+      function createShutter() {
+        const shutter = new THREE.Group();
+        shutter.name = "shutter_mesh";
+        shutter.userData.key = "shutter";
+        shutter.position.set(2.9, 2.55, -1.9);
+        shutter.rotation.y = -Math.PI / 2;
+
+        const frame = new THREE.Mesh(
+          new THREE.BoxGeometry(0.84, 1.14, 0.12),
+          new THREE.MeshStandardMaterial({ color: 0x383232, roughness: 0.8 })
+        );
+        frame.castShadow = true;
+        shutter.add(frame);
+
+        const panel = new THREE.Mesh(
+          new THREE.BoxGeometry(0.62, 0.92, 0.06),
+          new THREE.MeshStandardMaterial({ color: 0x534130, roughness: 0.78 })
+        );
+        panel.position.z = 0.1;
+        panel.castShadow = true;
+        shutter.add(panel);
+
+        scene.add(shutter);
+
+        const beam = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.08, 0.18, 3.8, 16, 1, true),
+          new THREE.MeshBasicMaterial({
+            color: 0xffd178,
+            transparent: true,
+            opacity: 0,
+            side: THREE.DoubleSide,
+            depthWrite: false,
+          })
+        );
+        beam.position.set(1.82, 1.88, -0.66);
+        beam.rotation.z = Math.PI / 2;
+        beam.rotation.y = 0.26;
+        beam.visible = false;
+        scene.add(beam);
+
+        world.entities.shutter = {
+          key: "shutter",
+          root: shutter,
+          mesh: panel,
+          beam,
+        };
+      }
+
+      function createStoryLabel(key) {
+        const element = document.createElement("div");
+        element.className = "story-label hidden";
+        const label = new CSS2DObject(element);
+        label.userData.basePosition = new THREE.Vector3();
+        scene.add(label);
+        world.labels[key] = element;
+        return label;
+      }
+
+      function placeLabels() {
+        world.entities.mirror.label.position.copy(world.entities.mirror.root.position).add(new THREE.Vector3(0, 0.95, 0.1));
+        world.entities.seed.label.position.copy(world.entities.seed.root.position).add(new THREE.Vector3(0, 0.55, 0));
+        world.entities.roots.label.position.set(0, 4.5, -5.2);
+        world.entities.mirror.label.userData.basePosition.copy(world.entities.mirror.label.position);
+        world.entities.seed.label.userData.basePosition.copy(world.entities.seed.label.position);
+        world.entities.roots.label.userData.basePosition.copy(world.entities.roots.label.position);
+      }
+
+      placeLabels();
+
+      function buildUiSlots() {
+        for (let index = 0; index < 3; index += 1) {
+          const slot = document.createElement("button");
+          slot.type = "button";
+          slot.className = "slot";
+          slot.dataset.index = String(index);
+          slot.innerHTML = `
+            <div class="slot-index">VIAL ${index + 1}</div>
+            <div class="slot-label">EMPTY</div>
+          `;
+          slot.addEventListener("click", () => loadConcept(index));
+          ui.belt.appendChild(slot);
+        }
+
+        ui.startBtn.addEventListener("click", startExperience);
+        ui.extractBtn.addEventListener("click", triggerPrimaryAction);
+        ui.uiBtn.addEventListener("click", toggleUi);
+        window.addEventListener("pointerdown", unlockSoundtrack, { passive: true });
+        window.addEventListener("keydown", unlockSoundtrack, { passive: true });
+        renderer.domElement.addEventListener("pointermove", onPointerMove);
+        renderer.domElement.addEventListener("pointerdown", onPointerDown);
+        renderer.domElement.addEventListener("pointerup", onPointerUp);
+        renderer.domElement.addEventListener("pointerleave", onPointerLeave);
+        renderer.domElement.addEventListener("contextmenu", (event) => event.preventDefault());
+        window.addEventListener("keydown", onKeyDown);
+        window.addEventListener("keyup", onKeyUp);
+        window.addEventListener("resize", onResize);
+      }
+
+      function startExperience() {
+        ui.intro.classList.add("hidden");
+        synth.ensureContext();
+        unlockSoundtrack();
+        updateObjectiveFromState();
+      }
+
+      function attemptAutoplaySoundtrack() {
+        ui.soundtrack.volume = 0.55;
+        const playPromise = ui.soundtrack.play();
+        if (playPromise && typeof playPromise.catch === "function") {
+          playPromise.catch(() => {});
+        } else {
+          soundtrackUnlocked = true;
+        }
+      }
+
+      function unlockSoundtrack() {
+        if (soundtrackUnlocked) {
+          return;
+        }
+        const playPromise = ui.soundtrack.play();
+        if (playPromise && typeof playPromise.then === "function") {
+          playPromise
+            .then(() => {
+              soundtrackUnlocked = true;
+            })
+            .catch(() => {});
+          return;
+        }
+        soundtrackUnlocked = true;
+      }
+
+      function toggleUi() {
+        runtime.uiHidden = !runtime.uiHidden;
+        ui.app.classList.toggle("ui-hidden", runtime.uiHidden);
+        ui.uiBtn.textContent = runtime.uiHidden ? "Show UI" : "Hide UI";
+      }
+
+      function onKeyDown(event) {
+        const key = event.key.toLowerCase();
+        if (event.code === "Space") {
+          event.preventDefault();
+          logosState.isLensActive = !logosState.isLensActive;
+          syncUi();
+          return;
+        }
+
+        if (event.code === "Tab") {
+          event.preventDefault();
+          toggleUi();
+          return;
+        }
+
+        if (key === "1") {
+          runtime.mode = "observe";
+          syncUi();
+          return;
+        }
+
+        if (key === "2") {
+          runtime.mode = "isolate";
+          syncUi();
+          return;
+        }
+
+        if (key === "3") {
+          runtime.mode = "imprint";
+          syncUi();
+          return;
+        }
+
+        if (key === "e") {
+          event.preventDefault();
+          triggerPrimaryAction();
+          return;
+        }
+
+        if (["w", "a", "s", "d"].includes(key)) {
+          runtime.keys.add(key);
+        }
+      }
+
+      function onKeyUp(event) {
+        runtime.keys.delete(event.key.toLowerCase());
+      }
+
+      function onResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        labelRenderer.setSize(window.innerWidth, window.innerHeight);
+        composer.setSize(window.innerWidth, window.innerHeight);
+        positionViewportCursor();
+      }
+
+      function onPointerMove(event) {
+        const bounds = renderer.domElement.getBoundingClientRect();
+        runtime.pointer.x = ((event.clientX - bounds.left) / bounds.width) * 2 - 1;
+        runtime.pointer.y = -((event.clientY - bounds.top) / bounds.height) * 2 + 1;
+        runtime.pointerScreen.x = event.clientX;
+        runtime.pointerScreen.y = event.clientY;
+        runtime.isPointerInside = true;
+        positionViewportCursor();
+      }
+
+      function onPointerDown(event) {
+        if (event.button !== 0) {
+          return;
+        }
+        runtime.pointerDown = {
+          x: event.clientX,
+          y: event.clientY,
+        };
+      }
+
+      function onPointerUp(event) {
+        if (event.button !== 0 || ui.intro.classList.contains("hidden") === false || runtime.completed) {
+          runtime.pointerDown = null;
+          return;
+        }
+
+        const started = runtime.pointerDown;
+        runtime.pointerDown = null;
+        if (!started) {
+          return;
+        }
+
+        const moved = Math.hypot(event.clientX - started.x, event.clientY - started.y);
+        if (moved > 6) {
+          return;
+        }
+
+        const targetKey = pickObjectAtClientPoint(event.clientX, event.clientY);
+        if (!targetKey) {
+          return;
+        }
+
+        runtime.hovered = targetKey;
+        runtime.selected = targetKey;
+
+        syncUi();
+      }
+
+      function onPointerLeave() {
+        runtime.isPointerInside = false;
+        runtime.hovered = null;
+        runtime.pointerDown = null;
+        ui.viewportCursor.style.opacity = "0";
+        renderer.domElement.style.cursor = "default";
+      }
+
+      function positionViewportCursor() {
+        ui.viewportCursor.style.left = `${runtime.pointerScreen.x}px`;
+        ui.viewportCursor.style.top = `${runtime.pointerScreen.y}px`;
+        ui.viewportCursor.style.opacity = runtime.isPointerInside && !runtime.uiHidden ? "1" : "0";
+      }
+
+      function getInteractiveRoot(object) {
+        let node = object;
+        while (node && !node.userData.key) {
+          node = node.parent;
+        }
+        return node;
+      }
+
+      function updateHover() {
+        if (!runtime.isPointerInside) {
+          runtime.hovered = null;
+          return;
+        }
+
+        runtime.hovered = pickObjectAtPointer(runtime.pointer);
+      }
+
+      function pickObjectAtPointer(pointer) {
+        raycaster.setFromCamera(pointer, camera);
+        const roots = [
+          world.entities.mirror.root,
+          world.entities.seed.root,
+          world.entities.roots.root,
+          world.entities.shutter.root,
+          world.entities.door.root,
+        ];
+
+        const intersections = raycaster.intersectObjects(roots, true);
+        const hit = intersections.find((item) => {
+          const root = getInteractiveRoot(item.object);
+          return Boolean(root);
+        });
+
+        return hit ? getInteractiveRoot(hit.object).userData.key : null;
+      }
+
+      function pickObjectAtClientPoint(clientX, clientY) {
+        const bounds = renderer.domElement.getBoundingClientRect();
+        const pointer = new THREE.Vector2(
+          ((clientX - bounds.left) / bounds.width) * 2 - 1,
+          -((clientY - bounds.top) / bounds.height) * 2 + 1
+        );
+        return pickObjectAtPointer(pointer);
+      }
+
+      function triggerPrimaryAction() {
+        const targetKey = getActiveTargetKey();
+        if (!targetKey) {
+          syncUi();
+          return;
+        }
+
+        const action = getPrimaryAction(targetKey);
+        if (!action.enabled) {
+          addLog(action.disabledReason);
+          syncUi();
+          return;
+        }
+
+        if (action.kind === "observe") {
+          observeTarget(targetKey);
+          return;
+        }
+
+        if (action.kind === "isolate") {
+          isolateConceptFromTarget(targetKey);
+          return;
+        }
+
+        if (action.kind === "imprint") {
+          imprintConceptOnTarget(targetKey);
+          return;
+        }
+
+        if (action.kind === "open") {
+          openShutter();
+          return;
+        }
+
+        if (action.kind === "exit") {
+          completeExperience();
+          return;
+        }
+      }
+
+      function observeTarget(targetKey) {
+        if (!logosState.isLensActive) {
+          addLog("Observation failed. The Lens is needed to read the hidden substrate of the object.");
+          syncUi();
+          return;
+        }
+
+        runtime.selected = targetKey;
+
+        const fragments = getVisibleResearchFragments(targetKey);
+        const observed = researchState[targetKey] ?? 0;
+        if (!fragments.length) {
+          addLog("No hidden syntax is available for this target.");
+          syncUi();
+          return;
+        }
+
+        if (observed >= fragments.length) {
+          addLog(`${getDisplayName(targetKey)} is already resolved to its current core explanation.`);
+          syncUi();
+          return;
+        }
+
+        researchState[targetKey] = observed + 1;
+        addLog(`Observation recorded: ${fragments[observed]}`);
+
+        if (isUnderstood(targetKey)) {
+          addLog(`Core story resolved: ${getCoreStory(targetKey)}`);
+          updateObjectiveFromState();
+        }
+
+        syncUi();
+      }
+
+      function isolateConceptFromTarget(targetKey) {
+        if (!logosState.isLensActive) {
+          addLog("Isolation failed. The Lens must be active before the Astrolabe can cut into a story.");
+          syncUi();
+          return;
+        }
+
+        if (!isUnderstood(targetKey)) {
+          addLog("Isolation failed. You have not yet understood the object's core story.");
+          syncUi();
+          return;
+        }
+
+        synth.ensureContext();
+
+        if (targetKey === "mirror") {
+          if (!runtime.windowOpen) {
+            addLog("The mirror's archive is stale. It needs a current event of light before witness can be isolated.");
+            setObjective("Open the shutter and observe the mirror again.");
+            syncUi();
+            return;
+          }
+          if (logosState.entities.mirror.isExtracted) {
+            addLog("The mirror is already dead lead. Its witness has been removed.");
+            syncUi();
+            return;
+          }
+
+          logosState.entities.mirror.isExtracted = true;
+          addConceptToInventory("MEMORY_OF_LIGHT");
+          world.entities.mirror.mesh.material = world.entities.mirror.deadMaterial;
+          addLog("You isolate MEMORY_OF_LIGHT from the mirror. Silver falls away; witness remains.");
+          animateFlight("MEMORY_OF_LIGHT", world.entities.mirror.root.position, 0);
+          pulseCanvas();
+          synth.clack();
+          setObjective("Load MEMORY_OF_LIGHT and test it against the seed.");
+          syncUi();
+          return;
+        }
+
+        if (targetKey === "seed" && logosState.entities.seed.isTransformed) {
+          if (logosState.inventory.includes("CONCEPT_OF_MORNING")) {
+            addLog("The bloom has already yielded CONCEPT_OF_MORNING.");
+            syncUi();
+            return;
+          }
+          addConceptToInventory("CONCEPT_OF_MORNING");
+          animateFlight("CONCEPT_OF_MORNING", world.entities.seed.root.position, 1);
+          addLog("You isolate CONCEPT_OF_MORNING from the bloom. Beginning has become portable.");
+          pulseCanvas();
+          synth.clack();
+          setObjective("Load CONCEPT_OF_MORNING and test it against the roots.");
+          syncUi();
+          return;
+        }
+
+        addLog(`${getDisplayName(targetKey)} does not presently expose a stable extractable concept.`);
+        syncUi();
+      }
+
+      function imprintConceptOnTarget(targetKey) {
+        if (!logosState.loadedConcept) {
+          addLog("No concept is chambered in the Astrolabe.");
+          syncUi();
+          return;
+        }
+
+        if (targetKey === "shutter") {
+          openShutter();
+          return;
+        }
+
+        if (targetKey === "door") {
+          if (runtime.doorOpen) {
+            completeExperience();
+          } else {
+            addLog("The door is downstream of the roots. Imprinting the threshold would miss the cause.");
+            syncUi();
+          }
+          return;
+        }
+
+        if (targetKey === "seed") {
+          const logic = logosState.entities.seed.impartLogic;
+          if (logosState.loadedConcept !== logic.requiredConcept || logosState.entities.seed.isTransformed) {
+            addLog("The seed rejects the payload. This concept does not count as a beginning.");
+            syncUi();
+            return;
+          }
+
+          logosState.entities.seed.isTransformed = true;
+          logosState.loadedConcept = null;
+          logosState.entities.seed.surfaceName = logic.newSurfaceName;
+          logosState.entities.seed.trueStory = logic.newTrueStory;
+          logosState.entities.seed.coreStory = logic.newCoreStory;
+          logosState.entities.seed.extractableConcept = logic.newExtractableConcept;
+          animateSeedTransformation();
+          setObjective("Observe the bloom, resolve its core story, then isolate CONCEPT_OF_MORNING.");
+          addLog("MEMORY_OF_LIGHT is imparted. The seed revises itself into a bloom that remembers how to begin.");
+          synth.thud();
+          syncUi();
+          return;
+        }
+
+        if (targetKey === "roots") {
+          const logic = logosState.entities.roots.impartLogic;
+          if (logosState.loadedConcept !== logic.requiredConcept || logosState.entities.roots.isTransformed) {
+            addLog("The roots do not accept the loaded concept. Grief remains calcified because the payload does not resolve its cause.");
+            syncUi();
+            return;
+          }
+
+          logosState.entities.roots.isTransformed = true;
+          logosState.entities.roots.trueStory = logic.newTrueStory;
+          logosState.entities.roots.coreStory = logic.newCoreStory;
+          logosState.loadedConcept = null;
+          runtime.doorOpen = true;
+          animateRootsTransformation();
+          addLog("CONCEPT_OF_MORNING resolves the roots. Protection no longer mistakes release for betrayal.");
+          setObjective("The path is open. Approach the door and step through.");
+          synth.thud();
+          syncUi();
+          return;
+        }
+
+        addLog(`${getDisplayName(targetKey)} has no meaningful response to the currently loaded concept.`);
+        syncUi();
+      }
+
+      function openShutter() {
+        if (!runtime.windowOpen) {
+          runtime.windowOpen = true;
+          world.entities.shutter.root.rotation.y = -Math.PI / 2 + 0.82;
+          world.entities.shutter.beam.visible = true;
+          world.entities.shutter.beam.material.opacity = 0.3;
+          addLog("The shutter opens. Morning enters as a narrow and disciplined sentence.");
+          updateObjectiveFromState();
+          syncUi();
+          return;
+        }
+        addLog("The shutter is already open.");
+        syncUi();
+      }
+
+      function animateSeedTransformation() {
+        const seedEntity = world.entities.seed;
+        seedEntity.mesh.visible = false;
+        seedEntity.bloomMesh.visible = true;
+        seedEntity.bloomLight.intensity = 0.8;
+        const start = performance.now();
+
+        const animate = (now) => {
+          const t = Math.min((now - start) / 1000, 1);
+          const eased = 1 - Math.pow(1 - t, 3);
+          seedEntity.bloomMesh.scale.setScalar(0.1 + eased * 0.9);
+          seedEntity.bloomMesh.rotation.x = eased * Math.PI * 2.4;
+          seedEntity.bloomMesh.rotation.y = eased * Math.PI * 1.8;
+          seedEntity.bloomLight.intensity = 0.8 + eased * 1.6;
+          renderer.domElement.style.filter = `brightness(${1 + eased * 0.18})`;
+          if (t < 1) {
+            requestAnimationFrame(animate);
+          } else {
+            renderer.domElement.style.filter = "";
+          }
+        };
+
+        requestAnimationFrame(animate);
+      }
+
+      function animateRootsTransformation() {
+        const start = performance.now();
+        const door = world.entities.door.root;
+
+        const animate = (now) => {
+          const t = Math.min((now - start) / 1400, 1);
+          const eased = 1 - Math.pow(1 - t, 3);
+
+          world.rootSegments.forEach((segment, index) => {
+            segment.scale.y = 1 - eased * 0.88;
+            segment.position.y = segment.userData.baseY - eased * (1.5 + index * 0.04);
+            segment.material.color.lerp(new THREE.Color(0x6b4c2f), eased);
+            segment.material.opacity = 0.9 - eased * 0.28;
+          });
+
+          door.position.z = -5.7 - eased * 0.44;
+          door.rotation.y = -eased * 0.2;
+
+          if (t < 1) {
+            requestAnimationFrame(animate);
+          }
+        };
+
+        requestAnimationFrame(animate);
+      }
+
+      function completeExperience() {
+        if (runtime.completed) {
+          return;
+        }
+        runtime.completed = true;
+        ui.epiphany.classList.add("active");
+        addLog("EPIPHANY ACHIEVED.");
+        setObjective("The Logos unspools.");
+        synth.swell();
+        syncUi();
+      }
+
+      function addConceptToInventory(concept) {
+        if (!logosState.inventory.includes(concept)) {
+          logosState.inventory.push(concept);
+        }
+      }
+
+      function loadConcept(index) {
+        const concept = logosState.inventory[index];
+        if (!concept) {
+          return;
+        }
+        synth.ensureContext();
+        logosState.loadedConcept = concept;
+        synth.chamber();
+        addLog(`${concept} is chambered in the Astrolabe.`);
+        syncUi();
+      }
+
+      function addLog(entry) {
+        runtime.interactionLog.unshift(entry);
+        runtime.interactionLog = runtime.interactionLog.slice(0, 4);
+      }
+
+      function setObjective(text) {
+        ui.objectiveCopy.textContent = text;
+      }
+
+      function pulseCanvas() {
+        ui.viewport.classList.remove("canvas-shake");
+        void ui.viewport.offsetWidth;
+        ui.viewport.classList.add("canvas-shake");
+      }
+
+      function worldToScreen(position) {
+        const projected = position.clone().project(camera);
+        return {
+          x: (projected.x * 0.5 + 0.5) * window.innerWidth,
+          y: (-projected.y * 0.5 + 0.5) * window.innerHeight,
+        };
+      }
+
+      function animateFlight(text, fromWorldPosition, slotIndex) {
+        const slot = ui.belt.children[slotIndex];
+        if (!slot) {
+          return;
+        }
+        const from = worldToScreen(fromWorldPosition);
+        const toBounds = slot.getBoundingClientRect();
+        const to = {
+          x: toBounds.left + toBounds.width / 2,
+          y: toBounds.top + toBounds.height / 2,
+        };
+
+        const node = document.createElement("div");
+        node.className = "flying-word";
+        node.textContent = text;
+        node.style.transform = `translate(${from.x}px, ${from.y}px)`;
+        ui.app.appendChild(node);
+
+        requestAnimationFrame(() => {
+          node.style.transition = "transform 720ms cubic-bezier(.22,.84,.18,1), opacity 720ms ease";
+          node.style.transform = `translate(${to.x}px, ${to.y}px) scale(0.84)`;
+          node.style.opacity = "0.2";
+        });
+
+        setTimeout(() => node.remove(), 760);
+      }
+
+      function syncUi() {
+        ui.lensState.textContent = logosState.isLensActive ? "Lens Active" : "Lens Inactive";
+        ui.lensState.classList.toggle("lens-indicator", logosState.isLensActive);
+        ui.modeState.textContent = modeLabels[runtime.mode];
+        ui.targetMode.textContent = `${modeLabels[runtime.mode]} / ${logosState.isLensActive ? "Logos" : "Surface"}`;
+        ui.viewportCursor.classList.toggle("engaged", Boolean(runtime.hovered));
+        renderer.domElement.style.cursor = runtime.hovered ? "pointer" : "default";
+        ui.viewportCursor.style.opacity = runtime.isPointerInside && !runtime.uiHidden ? "1" : "0";
+
+        outlinePass.selectedObjects = runtime.hovered
+          ? [runtime.hovered ? world.entities[runtime.hovered]?.root : null].filter(Boolean)
+          : [];
+        lensPass.uniforms.amount.value = logosState.isLensActive ? 1 : 0;
+
+        syncLabels();
+        syncTargetPanel();
+        syncInventoryPanel();
+        syncLog();
+        syncPrimaryAction();
+      }
+
+      function syncLabels() {
+        Object.keys(world.labels).forEach((key) => {
+          const element = world.labels[key];
+          if (!logosState.isLensActive) {
+            element.classList.add("hidden");
+            return;
+          }
+          element.classList.remove("hidden");
+          element.textContent = getStoryText(key);
+        });
+      }
+
+      function syncTargetPanel() {
+        const targetKey = getActiveTargetKey();
+        if (!targetKey) {
+          ui.targetName.textContent = "No target stabilized";
+          ui.surfaceCopy.textContent = "Walk with WASD. Click an object to stabilize it. Observe reveals fragments; isolate and imprint operate on the hidden core.";
+          ui.storyCopy.textContent = "No true story is currently resolved.";
+          ui.targetChip.textContent = "No object selected. Use 1 / 2 / 3 to choose the instrument mode, then press E.";
+          return;
+        }
+
+        if (targetKey === "mirror") {
+          ui.targetName.textContent = logosState.entities.mirror.surfaceName;
+        } else if (targetKey === "seed") {
+          ui.targetName.textContent = logosState.entities.seed.surfaceName;
+        } else if (targetKey === "roots") {
+          ui.targetName.textContent = logosState.entities.roots.surfaceName;
+        } else if (targetKey === "shutter") {
+          ui.targetName.textContent = "Morning Shutter";
+        } else if (targetKey === "door") {
+          ui.targetName.textContent = "Scriptorium Door";
+        }
+
+        ui.surfaceCopy.textContent = loreNotes[targetKey].surface;
+        ui.targetChip.textContent = getTargetInstruction(targetKey);
+        ui.storyCopy.innerHTML = buildResearchCopy(targetKey);
+      }
+
+      function syncInventoryPanel() {
+        Array.from(ui.belt.children).forEach((slot, index) => {
+          const concept = logosState.inventory[index];
+          slot.classList.toggle("active", logosState.loadedConcept === concept && Boolean(concept));
+          slot.querySelector(".slot-label").textContent = concept || "EMPTY";
+        });
+
+        ui.loadedCopy.textContent = logosState.loadedConcept ? `Loaded: ${logosState.loadedConcept}` : "Astrolabe idle";
+        ui.payloadCopy.textContent = logosState.loadedConcept
+          ? `${logosState.loadedConcept}: ${conceptDescriptions[logosState.loadedConcept]}`
+          : "No concept is loaded. Extract a syntagm and chamber it here.";
+      }
+
+      function syncLog() {
+        ui.logContainer.innerHTML = "";
+        runtime.interactionLog.forEach((entry) => {
+          const row = document.createElement("div");
+          row.className = "log-entry";
+          row.textContent = entry;
+          ui.logContainer.appendChild(row);
+        });
+      }
+
+      function getStoryText(key) {
+        if (!isUnderstood(key)) {
+          const observed = getObservedFragments(key).length;
+          const total = getVisibleResearchFragments(key).length || "?";
+          return `${getDisplayName(key).toUpperCase()} [${observed}/${total}]`;
+        }
+        if (key === "mirror") {
+          return logosState.entities.mirror.isExtracted
+            ? logosState.entities.mirror.deadStory
+            : logosState.entities.mirror.trueStory;
+        }
+        if (key === "seed") {
+          return logosState.entities.seed.trueStory;
+        }
+        if (key === "roots") {
+          return logosState.entities.roots.trueStory;
+        }
+        if (key === "shutter") {
+          return "A disciplined wound in stone. It decides which morning enters the room and how sharply truth is cut.";
+        }
+        if (key === "door") {
+          return runtime.doorOpen
+            ? "A threshold released from quarantine."
+            : "A threshold waiting for the room's argument to conclude.";
+        }
+        return "";
+      }
+
+      function getVisibleResearchFragments(targetKey) {
+        const providers = researchFragments[targetKey] || [];
+        return providers.map((provider) => provider()).filter(Boolean);
+      }
+
+      function getObservedFragments(targetKey) {
+        const visible = getVisibleResearchFragments(targetKey);
+        const count = Math.min(researchState[targetKey] || 0, visible.length);
+        return visible.slice(0, count);
+      }
+
+      function isUnderstood(targetKey) {
+        const visible = getVisibleResearchFragments(targetKey);
+        return visible.length > 0 && (researchState[targetKey] || 0) >= visible.length;
+      }
+
+      function getCoreStory(targetKey) {
+        if (targetKey === "mirror") {
+          return logosState.entities.mirror.isExtracted ? logosState.entities.mirror.deadStory : logosState.entities.mirror.coreStory;
+        }
+        if (targetKey === "seed") {
+          return logosState.entities.seed.coreStory;
+        }
+        if (targetKey === "roots") {
+          return logosState.entities.roots.coreStory;
+        }
+        if (targetKey === "shutter") {
+          return "At its core, the shutter is a selector: a machine for admitting only the thin edge of a beginning.";
+        }
+        if (targetKey === "door") {
+          return runtime.doorOpen
+            ? "At its core, the door is a conclusion made traversable."
+            : "At its core, the door is not an obstacle but a thesis waiting for resolution.";
+        }
+        return "";
+      }
+
+      function buildResearchCopy(targetKey) {
+        if (!logosState.isLensActive) {
+          return `<em>Lens inactive.</em> ${loreNotes[targetKey].hint}`;
+        }
+
+        const observed = getObservedFragments(targetKey);
+        const visible = getVisibleResearchFragments(targetKey);
+        if (!observed.length) {
+          return `<em>Core story hidden.</em> Use Observe to reveal what this object is at its core.`;
+        }
+
+        const lines = observed.map((fragment, index) => `${index + 1}. ${fragment}`);
+        if (observed.length < visible.length) {
+          lines.push(`... ${visible.length - observed.length} deeper fragment(s) remain unresolved.`);
+        } else {
+          lines.push(`Core Story: ${getCoreStory(targetKey)}`);
+        }
+        return lines.join("<br>");
+      }
+
+      function getPrimaryAction(targetKey = getActiveTargetKey()) {
+        if (!targetKey) {
+          return {
+            label: "[ SELECT AN OBJECT ]",
+            enabled: false,
+            disabledReason: "No object selected.",
+          };
+        }
+
+        if (targetKey === "shutter") {
+          return {
+            label: runtime.windowOpen ? "[ SHUTTER OPEN ]" : "[ OPEN SHUTTER ]",
+            enabled: !runtime.windowOpen,
+            disabledReason: "The shutter is already open.",
+            kind: "open",
+          };
+        }
+
+        if (targetKey === "door") {
+          return {
+            label: runtime.doorOpen ? "[ STEP THROUGH ]" : "[ THRESHOLD SEALED ]",
+            enabled: runtime.doorOpen,
+            disabledReason: "The threshold is still being held by the roots.",
+            kind: "exit",
+          };
+        }
+
+        if (runtime.mode === "observe") {
+          return {
+            label: "[ OBSERVE CORE ]",
+            enabled: logosState.isLensActive,
+            disabledReason: "Activate Lens Mode to observe hidden syntax.",
+            kind: "observe",
+          };
+        }
+
+        if (runtime.mode === "isolate") {
+          if (targetKey === "mirror") {
+            return {
+              label: "[ ISOLATE WITNESS ]",
+              enabled: logosState.isLensActive && isUnderstood(targetKey) && runtime.windowOpen && !logosState.entities.mirror.isExtracted,
+              disabledReason: !logosState.isLensActive
+                ? "Activate Lens Mode first."
+                : !isUnderstood(targetKey)
+                  ? "Observe the mirror until its core story is resolved."
+                  : !runtime.windowOpen
+                    ? "Open the shutter so the mirror has a current witness."
+                    : "The mirror is already drained.",
+              kind: "isolate",
+            };
+          }
+
+          if (targetKey === "seed" && logosState.entities.seed.isTransformed) {
+            return {
+              label: "[ ISOLATE MORNING ]",
+              enabled: logosState.isLensActive && isUnderstood(targetKey) && !logosState.inventory.includes("CONCEPT_OF_MORNING"),
+              disabledReason: !logosState.isLensActive
+                ? "Activate Lens Mode first."
+                : !isUnderstood(targetKey)
+                  ? "Observe the bloom until its core story is resolved."
+                  : "The bloom has already yielded CONCEPT_OF_MORNING.",
+              kind: "isolate",
+            };
+          }
+
+          return {
+            label: "[ NO STABLE CONCEPT ]",
+            enabled: false,
+            disabledReason: "This object does not currently expose an isolatable concept.",
+          };
+        }
+
+        if (runtime.mode === "imprint") {
+          return {
+            label: "[ IMPRINT PAYLOAD ]",
+            enabled: Boolean(logosState.loadedConcept),
+            disabledReason: "Load a concept in the Lexicon Belt first.",
+            kind: "imprint",
+          };
+        }
+
+        return {
+          label: "[ NO ACTION ]",
+          enabled: false,
+          disabledReason: "No valid action.",
+        };
+      }
+
+      function getTargetInstruction(targetKey = getActiveTargetKey()) {
+        if (!targetKey) {
+          return "No object selected.";
+        }
+
+        if (targetKey === "shutter") {
+          return runtime.windowOpen ? "Shutter already open." : "Press E to admit a narrow line of morning.";
+        }
+        if (targetKey === "mirror") {
+          if (runtime.mode === "observe") return "Observe until you understand what the mirror is at its core.";
+          if (runtime.mode === "isolate") return "Once understood and illuminated, isolate MEMORY_OF_LIGHT.";
+          return "The mirror is a source object, not an imprint target.";
+        }
+        if (targetKey === "seed") {
+          if (runtime.mode === "observe") return "Observe what the seed is really waiting for.";
+          if (runtime.mode === "isolate") return logosState.entities.seed.isTransformed
+            ? "Resolve the bloom's core story, then isolate CONCEPT_OF_MORNING."
+            : "The seed exposes no stable concept until it transforms.";
+          return logosState.entities.seed.isTransformed
+            ? "The bloom could receive a payload, but morning belongs with the roots."
+            : "Load MEMORY_OF_LIGHT, then imprint it into the seed.";
+        }
+        if (targetKey === "roots") {
+          if (runtime.mode === "observe") return "Observe why these roots hardened in the first place.";
+          if (runtime.mode === "isolate") return "The roots expose no portable concept; they require healing.";
+          return runtime.doorOpen
+            ? "The roots have already released the door."
+            : "Load CONCEPT_OF_MORNING, then imprint it into the roots.";
+        }
+        if (targetKey === "door") {
+          return runtime.doorOpen ? "Press E to step through the resolved threshold." : "The door cannot open while grief remains.";
+        }
+        return "";
+      }
+
+      function syncPrimaryAction() {
+        const action = getPrimaryAction();
+        ui.extractBtn.textContent = action.label;
+        ui.extractBtn.disabled = !action.enabled;
+        ui.extractBtn.classList.toggle("enabled", action.enabled);
+      }
+
+      function getActiveTargetKey() {
+        return runtime.selected || null;
+      }
+
+      function getDisplayName(targetKey) {
+        if (targetKey === "mirror") return logosState.entities.mirror.surfaceName;
+        if (targetKey === "seed") return logosState.entities.seed.surfaceName;
+        if (targetKey === "roots") return logosState.entities.roots.surfaceName;
+        if (targetKey === "shutter") return "Morning Shutter";
+        if (targetKey === "door") return "Scriptorium Door";
+        return targetKey;
+      }
+
+      function updateObjectiveFromState() {
+        if (!runtime.windowOpen) {
+          setObjective("Study the room. Open the shutter so the mirror can witness a live event.");
+          return;
+        }
+        if (!logosState.entities.mirror.isExtracted) {
+          setObjective("Resolve the mirror's core story, then isolate MEMORY_OF_LIGHT.");
+          return;
+        }
+        if (!logosState.entities.seed.isTransformed) {
+          setObjective("Load MEMORY_OF_LIGHT and test it against the seed.");
+          return;
+        }
+        if (!logosState.inventory.includes("CONCEPT_OF_MORNING")) {
+          setObjective("Resolve the bloom's core story, then isolate CONCEPT_OF_MORNING.");
+          return;
+        }
+        if (!runtime.doorOpen) {
+          setObjective("Load CONCEPT_OF_MORNING and test it against the roots.");
+          return;
+        }
+        setObjective("The path is open. Step through the threshold.");
+      }
+
+      window.advanceTime = (ms) => {
+        const steps = Math.max(1, Math.round(ms / (1000 / 60)));
+        for (let index = 0; index < steps; index += 1) {
+          tick(1 / 60);
+        }
+        draw();
+      };
+
+      window.render_game_to_text = () => {
+        const payload = {
+          note: "Camera moves through the Scriptorium. Click selects a target. Modes: observe, isolate, imprint. E triggers the instrument action.",
+          isLensActive: logosState.isLensActive,
+          mode: runtime.mode,
+          hovered: runtime.hovered,
+          selected: runtime.selected,
+          inventory: logosState.inventory,
+          loadedConcept: logosState.loadedConcept,
+          windowOpen: runtime.windowOpen,
+          doorOpen: runtime.doorOpen,
+          completed: runtime.completed,
+          researchState,
+          mirror: logosState.entities.mirror,
+          seed: logosState.entities.seed,
+          roots: logosState.entities.roots,
+          objective: ui.objectiveCopy.textContent,
+          logs: runtime.interactionLog,
+        };
+        return JSON.stringify(payload);
+      };
+
+      function tick(dt) {
+        updateHover();
+        updateMovement(dt);
+        controls.update();
+
+        Object.entries(world.entities).forEach(([key, entity]) => {
+          if (!entity.root) {
+            return;
+          }
+          const targetScale = runtime.hovered === key ? 1.06 : 1;
+          entity.root.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.18);
+        });
+
+        if (world.entities.seed.bloomMesh.visible) {
+          world.entities.seed.bloomMesh.rotation.y += dt * 1.4;
+          world.entities.seed.bloomMesh.rotation.z += dt * 0.6;
+          world.entities.seed.root.position.y = 1.38 + Math.sin(clock.elapsedTime * 1.6) * 0.04;
+        }
+
+        if (world.entities.shutter.beam.visible) {
+          world.entities.shutter.beam.material.opacity = 0.22 + Math.sin(clock.elapsedTime * 2.4) * 0.06;
+        }
+
+        Object.entries(world.labels).forEach(([key, element]) => {
+          if (element.classList.contains("hidden")) {
+            return;
+          }
+          const label = world.entities[key].label;
+          label.position.copy(label.userData.basePosition);
+          label.position.y += Math.sin(clock.elapsedTime * 1.4 + key.length) * 0.04;
+        });
+
+        syncUi();
+      }
+
+      function updateMovement(dt) {
+        if (!runtime.keys.size) {
+          return;
+        }
+
+        const forward = new THREE.Vector3();
+        camera.getWorldDirection(forward);
+        forward.y = 0;
+        if (forward.lengthSq() === 0) {
+          return;
+        }
+        forward.normalize();
+
+        const right = new THREE.Vector3(-forward.z, 0, forward.x).normalize();
+        const delta = new THREE.Vector3();
+
+        if (runtime.keys.has("w")) {
+          delta.add(forward);
+        }
+        if (runtime.keys.has("s")) {
+          delta.sub(forward);
+        }
+        if (runtime.keys.has("d")) {
+          delta.add(right);
+        }
+        if (runtime.keys.has("a")) {
+          delta.sub(right);
+        }
+
+        if (delta.lengthSq() === 0) {
+          return;
+        }
+
+        delta.normalize().multiplyScalar(MOVEMENT.speed * dt);
+
+        const nextTarget = controls.target.clone().add(delta);
+        const offset = camera.position.clone().sub(controls.target);
+
+        nextTarget.x = clamp(nextTarget.x, MOVEMENT.minX, MOVEMENT.maxX);
+        nextTarget.z = clamp(nextTarget.z, MOVEMENT.minZ, MOVEMENT.maxZ);
+
+        controls.target.copy(nextTarget);
+        camera.position.copy(nextTarget.clone().add(offset));
+      }
+
+      function clamp(value, min, max) {
+        return Math.min(max, Math.max(min, value));
+      }
+
+      function draw() {
+        if (logosState.isLensActive) {
+          composer.render();
+        } else {
+          renderer.render(scene, camera);
+        }
+        labelRenderer.render(scene, camera);
+      }
+
+      function animate() {
+        requestAnimationFrame(animate);
+        const dt = clock.getDelta();
+        tick(dt);
+        draw();
+      }
+    </script>
+  </body>
+</html>
