@@ -2434,6 +2434,59 @@
         return lines.join("<br>");
       }
 
+      function getIsolateAction(targetKey) {
+        if (targetKey === "mirror") {
+          return {
+            label: "[ ISOLATE WITNESS ]",
+            enabled: logosState.isLensActive && isUnderstood(targetKey) && runtime.windowOpen && !logosState.entities.mirror.isExtracted,
+            disabledReason: !logosState.isLensActive
+              ? "Activate Lens Mode first."
+              : !isUnderstood(targetKey)
+                ? "Observe the mirror until its core story is resolved."
+                : !runtime.windowOpen
+                  ? "Open the shutter so the mirror has a current witness."
+                  : "The mirror is already drained.",
+            kind: "isolate",
+          };
+        }
+
+        if (targetKey === "seed" && logosState.entities.seed.isTransformed) {
+          return {
+            label: "[ ISOLATE MORNING ]",
+            enabled: logosState.isLensActive && isUnderstood(targetKey) && !logosState.inventory.includes("CONCEPT_OF_MORNING"),
+            disabledReason: !logosState.isLensActive
+              ? "Activate Lens Mode first."
+              : !isUnderstood(targetKey)
+                ? "Observe the bloom until its core story is resolved."
+                : "The bloom has already yielded CONCEPT_OF_MORNING.",
+            kind: "isolate",
+          };
+        }
+
+        return {
+          label: "[ NO STABLE CONCEPT ]",
+          enabled: false,
+          disabledReason: "This object does not currently expose an isolatable concept.",
+        };
+      }
+
+      function getImprintAction(targetKey) {
+        if (!["seed", "roots"].includes(targetKey)) {
+          return {
+            label: "[ NO IMPRINT TARGET ]",
+            enabled: false,
+            disabledReason: "This object is not a valid imprint target.",
+          };
+        }
+
+        return {
+          label: "[ IMPRINT PAYLOAD ]",
+          enabled: Boolean(logosState.loadedConcept),
+          disabledReason: "Load a concept in the Lexicon Belt first.",
+          kind: "imprint",
+        };
+      }
+
       function getPrimaryAction(targetKey = getActiveTargetKey()) {
         if (!targetKey) {
           return {
@@ -2461,7 +2514,18 @@
           };
         }
 
+        const isolateAction = getIsolateAction(targetKey);
+        const imprintAction = getImprintAction(targetKey);
+
         if (runtime.mode === "observe") {
+          if (logosState.loadedConcept) {
+            return imprintAction;
+          }
+
+          if (isUnderstood(targetKey) && isolateAction.kind === "isolate") {
+            return isolateAction;
+          }
+
           return {
             label: "[ OBSERVE CORE ]",
             enabled: logosState.isLensActive,
@@ -2471,48 +2535,11 @@
         }
 
         if (runtime.mode === "isolate") {
-          if (targetKey === "mirror") {
-            return {
-              label: "[ ISOLATE WITNESS ]",
-              enabled: logosState.isLensActive && isUnderstood(targetKey) && runtime.windowOpen && !logosState.entities.mirror.isExtracted,
-              disabledReason: !logosState.isLensActive
-                ? "Activate Lens Mode first."
-                : !isUnderstood(targetKey)
-                  ? "Observe the mirror until its core story is resolved."
-                  : !runtime.windowOpen
-                    ? "Open the shutter so the mirror has a current witness."
-                    : "The mirror is already drained.",
-              kind: "isolate",
-            };
-          }
-
-          if (targetKey === "seed" && logosState.entities.seed.isTransformed) {
-            return {
-              label: "[ ISOLATE MORNING ]",
-              enabled: logosState.isLensActive && isUnderstood(targetKey) && !logosState.inventory.includes("CONCEPT_OF_MORNING"),
-              disabledReason: !logosState.isLensActive
-                ? "Activate Lens Mode first."
-                : !isUnderstood(targetKey)
-                  ? "Observe the bloom until its core story is resolved."
-                  : "The bloom has already yielded CONCEPT_OF_MORNING.",
-              kind: "isolate",
-            };
-          }
-
-          return {
-            label: "[ NO STABLE CONCEPT ]",
-            enabled: false,
-            disabledReason: "This object does not currently expose an isolatable concept.",
-          };
+          return isolateAction;
         }
 
         if (runtime.mode === "imprint") {
-          return {
-            label: "[ IMPRINT PAYLOAD ]",
-            enabled: Boolean(logosState.loadedConcept),
-            disabledReason: "Load a concept in the Lexicon Belt first.",
-            kind: "imprint",
-          };
+          return imprintAction;
         }
 
         return {
@@ -2531,12 +2558,23 @@
           return runtime.windowOpen ? "Shutter already open." : "Press E to admit a narrow line of morning.";
         }
         if (targetKey === "mirror") {
-          if (runtime.mode === "observe") return "Observe until you understand what the mirror is at its core.";
+          if (runtime.mode === "observe") {
+            return isUnderstood(targetKey)
+              ? "Core story resolved. Press E or Use to isolate MEMORY_OF_LIGHT."
+              : "Observe until you understand what the mirror is at its core.";
+          }
           if (runtime.mode === "isolate") return "Once understood and illuminated, isolate MEMORY_OF_LIGHT.";
           return "The mirror is a source object, not an imprint target.";
         }
         if (targetKey === "seed") {
-          if (runtime.mode === "observe") return "Observe what the seed is really waiting for.";
+          if (runtime.mode === "observe") {
+            if (logosState.loadedConcept === "MEMORY_OF_LIGHT" && !logosState.entities.seed.isTransformed) {
+              return "Payload chambered. Press E or Use to imprint MEMORY_OF_LIGHT into the seed.";
+            }
+            return logosState.entities.seed.isTransformed && isUnderstood(targetKey)
+              ? "Core story resolved. Press E or Use to isolate CONCEPT_OF_MORNING."
+              : "Observe what the seed is really waiting for.";
+          }
           if (runtime.mode === "isolate") return logosState.entities.seed.isTransformed
             ? "Resolve the bloom's core story, then isolate CONCEPT_OF_MORNING."
             : "The seed exposes no stable concept until it transforms.";
@@ -2545,7 +2583,11 @@
             : "Load MEMORY_OF_LIGHT, then imprint it into the seed.";
         }
         if (targetKey === "roots") {
-          if (runtime.mode === "observe") return "Observe why these roots hardened in the first place.";
+          if (runtime.mode === "observe") {
+            return logosState.loadedConcept === "CONCEPT_OF_MORNING" && !runtime.doorOpen
+              ? "Payload chambered. Press E or Use to imprint CONCEPT_OF_MORNING into the roots."
+              : "Observe why these roots hardened in the first place.";
+          }
           if (runtime.mode === "isolate") return "The roots expose no portable concept; they require healing.";
           return runtime.doorOpen
             ? "The roots have already released the door."
