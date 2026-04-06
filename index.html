@@ -1981,6 +1981,11 @@
 
         if (isUnderstood(targetKey)) {
           addLog(`Core story resolved: ${getCoreStory(targetKey)}`);
+          const nextAction = getIsolateAction(targetKey);
+          if (nextAction.kind === "isolate") {
+            runtime.mode = "isolate";
+            addLog(`Astrolabe reconfigured: ${nextAction.label.replace(/[\[\]]/g, "").trim()}.`);
+          }
           updateObjectiveFromState();
         }
 
@@ -2079,6 +2084,7 @@
 
           logosState.entities.seed.isTransformed = true;
           logosState.loadedConcept = null;
+          runtime.mode = "observe";
           logosState.entities.seed.surfaceName = logic.newSurfaceName;
           logosState.entities.seed.trueStory = logic.newTrueStory;
           logosState.entities.seed.coreStory = logic.newCoreStory;
@@ -2103,6 +2109,7 @@
           logosState.entities.roots.trueStory = logic.newTrueStory;
           logosState.entities.roots.coreStory = logic.newCoreStory;
           logosState.loadedConcept = null;
+          runtime.mode = "observe";
           runtime.doorOpen = true;
           animateRootsTransformation();
           addLog("CONCEPT_OF_MORNING resolves the roots. Protection no longer mistakes release for betrayal.");
@@ -2207,6 +2214,7 @@
         }
         synth.ensureContext();
         logosState.loadedConcept = concept;
+        runtime.mode = "imprint";
         synth.chamber();
         addLog(`${concept} is chambered in the Astrolabe.`);
         syncUi();

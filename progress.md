@@ -52,6 +52,7 @@ TODOs / Next steps:
 - Rechecked the `develop-web-game` Playwright client. It still cannot run here because the `playwright` package is not installed locally (`ERR_MODULE_NOT_FOUND`).
 - Fixed a progression bug in the redesigned Astrolabe flow: once an object's core story is fully understood, the primary action now automatically advances to the next valid step (`ISOLATE` or `IMPRINT`) instead of staying stuck on `OBSERVE`.
 - Updated target guidance copy so the UI explicitly tells the player when `E` / `Use` will isolate `MEMORY_OF_LIGHT`, isolate `CONCEPT_OF_MORNING`, or imprint a chambered concept.
+- Tightened the mode flow further: finishing observation now automatically switches the Astrolabe into `Isolate` when a concept is available, and loading a concept switches the Astrolabe into `Imprint`. Successful imprints switch back to `Observe` for the next discovery step.
 
 TODOs / Next steps:
 - If mobile camera rotation feels too sensitive on device, tune OrbitControls touch settings or add a dedicated right-side look pad.
